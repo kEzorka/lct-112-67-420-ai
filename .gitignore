@@ -9,6 +9,7 @@ models/
 *.onnx
 *.gguf
 *.bin
+*.pt
 *.wav
 !.env.example
 *.egg-info/
