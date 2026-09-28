@@ -17,20 +17,26 @@ from run_tts_bench import CANDIDATES, _register_known_candidates
 
 
 def main() -> None:
+    _register_known_candidates()
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--tts-candidate", required=True, choices=sorted(CANDIDATES) or ["<нет доступных>"]
     )
     parser.add_argument("--out-dir", type=Path, required=True)
-    parser.add_argument("--sample-rate", type=int, default=22050)
+    parser.add_argument(
+        "--sample-rate",
+        type=int,
+        default=None,
+        help="По умолчанию берётся из provider.sample_rate (частота, на которой обучена модель)",
+    )
     args = parser.parse_args()
 
-    _register_known_candidates()
     entry = CANDIDATES.get(args.tts_candidate)
     if entry is None:
         raise SystemExit(f"кандидат {args.tts_candidate!r} недоступен (нет весов или зависимости)")
     factory, voice_id = entry
     provider = factory()
+    sample_rate = args.sample_rate or getattr(provider, "sample_rate", 22050)
 
     args.out_dir.mkdir(parents=True, exist_ok=True)
     for utt in DATASET:
@@ -39,7 +45,7 @@ def main() -> None:
         with wave.open(str(path), "wb") as wav_file:
             wav_file.setnchannels(1)
             wav_file.setsampwidth(2)
-            wav_file.setframerate(args.sample_rate)
+            wav_file.setframerate(sample_rate)
             wav_file.writeframes(pcm)
     print(f"записано {len(DATASET)} файлов в {args.out_dir} (синтетическая речь, не живой голос)")
 
