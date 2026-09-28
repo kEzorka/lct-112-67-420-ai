@@ -21,6 +21,7 @@ import json
 import re
 from enum import StrEnum
 
+from .. import facts_guard
 from ..contracts.dialogue import SupervisorAction
 from . import matching
 
@@ -53,57 +54,9 @@ class InvalidReply(ValueError):
 
 
 # --- словари ------------------------------------------------------------------------------
+# Числа/адреса/службы/имена вне контекста — общая проверка facts_guard (E-5); здесь остаются
+# только реплико-специфичные словари: служебные темы, согласие, уточнение.
 
-_NUMBER_WORDS = frozenset(
-    """
-    ноль нуля один одна одно одного одной одному одним одну два две двое двух двум двумя двоих
-    три трое трех трем тремя троих четыре четверо четырех четырем четырьмя четверых пять
-    пятеро пяти пятью пятерых шесть шестеро шести шестью семь семеро семи семью восемь
-    восьми восемью девять девяти девятью десять десяти десятью сто ста двести триста
-    четыреста пятьсот шестьсот семьсот восемьсот девятьсот тысяча тысячи тысяч тысячу сорок
-    сорока девяносто девяноста полтора полторы несколько нескольких десяток десятка десятки
-    дюжина сотня сотни сотен первый второй третий четвертый пятый шестой седьмой восьмой
-    девятый десятый
-    """.split()
-)
-_NUMBER_WORD_RE = re.compile(r"^\w+(дцат|десят)\w*$")
-
-# Адресные элементы по группам: «доме» и «дома» — один элемент, «проспект» и «улица» — разные.
-_ADDRESS_GROUPS = {
-    "street": "ул улица улице улицу улицы",
-    "avenue": "проспект проспекте просп пр",
-    "lane": "переулок переулке пер",
-    "highway": "шоссе",
-    "boulevard": "бульвар бульваре",
-    "square": "площадь площади",
-    "house": "дом доме дома д",
-    "building": "корпус корп строение стр",
-    "flat": "кв квартира квартире квартиры квартиру",
-    "district": "мкр микрорайон микрорайоне",
-    "city": "г город города городе",
-    "settlement": "поселок поселке пос деревня деревне село селе",
-    "entrance": "подъезд подъезде",
-    "floor": "этаж этаже этажа этажей",
-}
-_ADDRESS = {w: group for group, words in _ADDRESS_GROUPS.items() for w in words.split()}
-_SERVICE_STEMS = (
-    "пожарн",
-    "полиц",
-    "газов",
-    "газовщ",
-    "мчс",
-    "спасат",
-    "росгвард",
-    "медик",
-    "медицин",
-    "реанимац",
-    "скорая",
-    "скорой",
-    "скорую",
-    "энергосбыт",
-    "водоканал",
-    "эвакуатор",
-)
 _META_STEMS = (
     "эталон",
     "оценк",
@@ -128,12 +81,19 @@ _ACCEPT_STEMS = ("принят", "принял", "принима", "получи
 _CONFIRM_STEMS = ("принят", "принял", "получил", "получен")
 _UNKNOWN_STEMS = ("неизвестн", "не известн")
 _CLARIFY_STEMS = ("уточн", "поясн", "повтор", "назов", "сообщ", "скаж", "поправ", "что", "как")
-_ALWAYS_ALLOWED = frozenset({"ддс"})
+_ALWAYS_ALLOWED = "ддс"
 
-_CAPITALIZED = re.compile(r"[А-ЯЁA-Z][А-ЯЁA-Zа-яёa-z-]*")
-_LATIN = re.compile(r"[A-Za-z]")
 _MARKUP_RE = re.compile(r"[<>{}]")
 _FENCE = re.compile(r"^```(?:json)?\s*|\s*```$")
+
+_FACT_REASON = {
+    facts_guard.FactViolationKind.NUMBER: RejectReason.NUMBER_OUTSIDE_CONTEXT,
+    facts_guard.FactViolationKind.NUMBER_WORD: RejectReason.NUMBER_WORD_OUTSIDE_CONTEXT,
+    facts_guard.FactViolationKind.ADDRESS: RejectReason.ADDRESS_OUTSIDE_CONTEXT,
+    facts_guard.FactViolationKind.SERVICE: RejectReason.SERVICE_OUTSIDE_CONTEXT,
+    facts_guard.FactViolationKind.FOREIGN_TEXT: RejectReason.FOREIGN_TEXT,
+    facts_guard.FactViolationKind.NAME: RejectReason.NAME_OUTSIDE_CONTEXT,
+}
 
 
 def _has_stem(toks: list[str] | set[str], stems: tuple[str, ...]) -> bool:
@@ -142,15 +102,6 @@ def _has_stem(toks: list[str] | set[str], stems: tuple[str, ...]) -> bool:
 
 def _stems_in(toks: list[str], stems: tuple[str, ...]) -> set[str]:
     return {s for s in stems for t in toks if t.startswith(s)}
-
-
-def _is_number_word(tok: str) -> bool:
-    return tok in _NUMBER_WORDS or bool(_NUMBER_WORD_RE.match(tok))
-
-
-def _sentence_start(text: str, pos: int) -> bool:
-    before = text[:pos].rstrip()
-    return not before or before[-1] in ".!?"
 
 
 def parse_output(raw: str) -> tuple[str, str]:
@@ -187,30 +138,13 @@ def check_text(
     if _MARKUP_RE.search(text):
         raise InvalidReply(RejectReason.MARKUP)
 
-    allowed = f"{draft} {context}"
-    allowed_toks = set(matching.tokens(allowed)) | _ALWAYS_ALLOWED
+    allowed = f"{draft} {context} {_ALWAYS_ALLOWED}"
     draft_toks = matching.tokens(draft)
     toks = matching.tokens(text)
-    new = [t for t in toks if t not in allowed_toks]
 
-    extra_digits = matching.digits(text) - matching.digits(allowed)
-    if extra_digits:
-        raise InvalidReply(RejectReason.NUMBER_OUTSIDE_CONTEXT, ",".join(sorted(extra_digits)))
-    if any(_is_number_word(t) for t in new):
-        raise InvalidReply(RejectReason.NUMBER_WORD_OUTSIDE_CONTEXT)
-    allowed_address = {_ADDRESS[t] for t in allowed_toks if t in _ADDRESS}
-    if {_ADDRESS[t] for t in toks if t in _ADDRESS} - allowed_address:
-        raise InvalidReply(RejectReason.ADDRESS_OUTSIDE_CONTEXT)
-    if _stems_in(toks, _SERVICE_STEMS) - _stems_in(matching.tokens(allowed), _SERVICE_STEMS):
-        raise InvalidReply(RejectReason.SERVICE_OUTSIDE_CONTEXT)
-    if _LATIN.search(text) and not set(_LATIN.findall(text)) <= set(_LATIN.findall(allowed)):
-        raise InvalidReply(RejectReason.FOREIGN_TEXT)
-    for m in _CAPITALIZED.finditer(text):
-        word = matching.normalize(m.group())
-        if not _sentence_start(text, m.start()) and not all(
-            t in allowed_toks for t in matching.tokens(word)
-        ):
-            raise InvalidReply(RejectReason.NAME_OUTSIDE_CONTEXT)
+    violation = facts_guard.find_violation(text, allowed=allowed)
+    if violation is not None:
+        raise InvalidReply(_FACT_REASON[violation.kind], violation.detail)
     # Служебные темы — только если они есть в черновике: реплика диспетчера их не разрешает.
     if _stems_in(toks, _META_STEMS) - _stems_in(draft_toks, _META_STEMS):
         raise InvalidReply(RejectReason.META_TALK)

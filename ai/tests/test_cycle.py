@@ -55,7 +55,10 @@ def run_fire(s, *, open_after=20, submit_after=170, report=FIRE_REPORT):
     s.notify()
     s.clock.advance(open_after)
     visible = s.open_card()
-    s.edit_card(services=["fire_service", "ambulance"])
+    s.edit_card(
+        services=["fire_service", "ambulance"],
+        description="Дым из окна квартиры соседей, пострадавших пока не выявлено.",
+    )
     s.decide(DispatcherDecision.RESPOND)
     s.dial()
     s.say(report)
@@ -130,8 +133,10 @@ def test_voice_cycle_with_mocks_reaches_final_score(fire, rubric):
     for r in ev.results:
         assert r.status is CriterionStatus.PASSED, (r.criterion_id, r.explanation)
     assert ev.summary.verdict is Verdict.PASSED and ev.summary.total == 100
-    semantic = ev.by_id("manual.grammar")
+    semantic = ev.by_id("card.circumstances")
     assert semantic.model_ref.model_name == "stub-judge"  # решение модели с версией
+    grammar = ev.by_id("manual.grammar")
+    assert grammar.decided_by == "rule" and grammar.rule_ref is not None  # не LLM (M5)
 
 
 def test_semantic_judge_failure_is_not_checked_not_zero(fire, rubric):
@@ -139,7 +144,8 @@ def test_semantic_judge_failure_is_not_checked_not_zero(fire, rubric):
     s.worker.injector.inject(ComponentName.SEMANTIC_JUDGE, FailureKind.TIMEOUT)
     run_fire(s)
     ev = s.evaluate(rubric)
-    assert ev.by_id("manual.grammar").status is CriterionStatus.NOT_CHECKED
+    assert ev.by_id("card.circumstances").status is CriterionStatus.NOT_CHECKED
+    assert ev.by_id("manual.additions").status is CriterionStatus.NOT_CHECKED
 
 
 # --- C-02: сдача без звонка ----------------------------------------------------------------------
@@ -150,7 +156,10 @@ def test_c02_attempt_without_call_reaches_review_without_fake_call(fire, rubric)
     s.notify()
     s.clock.advance(10)
     s.open_card()
-    s.edit_card(services=["fire_service", "ambulance"])
+    s.edit_card(
+        services=["fire_service", "ambulance"],
+        description="Дым из окна квартиры соседей, пострадавших пока не выявлено.",
+    )
     s.decide(DispatcherDecision.RESPOND)
     s.clock.advance(60)
     with pytest.raises(IncompleteSubmission) as exc:
@@ -229,7 +238,10 @@ def test_injection_in_call_changes_no_card_route_or_score(fire, rubric, attack):
     s.notify()
     s.clock.advance(20)
     s.open_card()
-    s.edit_card(services=["fire_service", "ambulance"])
+    s.edit_card(
+        services=["fire_service", "ambulance"],
+        description="Дым из окна квартиры соседей, пострадавших пока не выявлено.",
+    )
     s.decide(DispatcherDecision.RESPOND)
     s.dial()
     turn = s.say(attack)
@@ -290,6 +302,7 @@ def test_scenario_drop_then_redial_in_voice(scenarios, rubric):
     s.notify()
     s.clock.advance(5)
     s.open_card()
+    s.edit_card(description="Повторное сообщение, возгорание уже ликвидировано, подтверждено.")
     s.decide(DispatcherDecision.REFUSE)
     s.dial()
     s.say("Повторное сообщение о возгорании мусора.")

@@ -17,10 +17,10 @@
 from __future__ import annotations
 
 import random
-import re
 from datetime import datetime
 from uuid import UUID, uuid4
 
+from .. import facts_guard
 from ..contracts.card import CardField, CardGeneration, FieldOrigin, FieldState, IncidentCard
 from ..contracts.common import VersionRef
 from ..contracts.events import ComponentName
@@ -30,8 +30,6 @@ from ..ports import LLMProvider
 
 CARD_SCHEMA = VersionRef(name="card_schema", version="draft-1")
 DESCRIPTION_TOPIC = "description"
-
-_NUMBER_RE = re.compile(r"\d+")
 
 
 def _rng(scenario: Scenario, seed: int) -> random.Random:
@@ -90,24 +88,23 @@ def generate_card(
     )
 
 
-def _known_numbers(scenario: Scenario) -> set[str]:
-    allowed: set[str] = set()
+def _known_facts_text(scenario: Scenario) -> str:
+    parts: list[str] = []
     for fact in scenario.published_facts:
-        for value in _allowed_values(fact):
-            allowed.update(_NUMBER_RE.findall(value))
-    return allowed
+        parts.append(fact.label)
+        parts.extend(_allowed_values(fact))
+    return "; ".join(parts)
 
 
 def _validate_description(text: str, scenario: Scenario) -> str:
-    """Отклонить переформулировку, вносящую числа вне опубликованных фактов (инвариант 5)."""
+    """Отклонить переформулировку, вносящую факты вне опубликованных фактов сценария
+    (инвариант 5): числа, адресные элементы, службы, имена — общая проверка facts_guard (E-5)."""
     text = text.strip()
     if not text:
         raise InvalidOutput("empty description")
-    invented = set(_NUMBER_RE.findall(text)) - _known_numbers(scenario)
-    if invented:
-        raise InvalidOutput(
-            f"description invents numbers not in scenario facts: {sorted(invented)}"
-        )
+    violation = facts_guard.find_violation(text, allowed=_known_facts_text(scenario))
+    if violation is not None:
+        raise InvalidOutput(f"description invents a fact outside scenario: {violation.kind}")
     return text
 
 

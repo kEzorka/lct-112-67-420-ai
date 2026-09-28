@@ -9,22 +9,23 @@ from __future__ import annotations
 import re
 from collections.abc import Iterable
 
-_TOKEN = re.compile(r"\d+[а-яa-z]?|[а-яa-z]+")
-_DIGITS = re.compile(r"\d+")
+from ..text_norm import digits, normalize, tokens
+
+__all__ = [
+    "any_pattern",
+    "clauses",
+    "digits",
+    "is_injection",
+    "is_no",
+    "is_question",
+    "is_yes",
+    "normalize",
+    "pattern_matches",
+    "tokens",
+]
+
 # Сокращения, после которых точка не завершает фразу: «ул. Тестовая, д. 12».
 _ABBREV = {"ул", "д", "г", "пр", "пос", "кв", "корп", "стр", "пер", "просп", "мкр", "с", "т"}
-
-
-def normalize(text: str) -> str:
-    return text.lower().replace("ё", "е")
-
-
-def tokens(text: str) -> list[str]:
-    return _TOKEN.findall(normalize(text))
-
-
-def digits(text: str) -> set[str]:
-    return set(_DIGITS.findall(text))
 
 
 def _stem_in(stem: str, toks: Iterable[str]) -> bool:
