@@ -10,3 +10,4 @@ models/
 *.gguf
 *.bin
 *.wav
+!.env.example
