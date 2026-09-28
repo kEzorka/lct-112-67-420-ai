@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dds-ai/difficulty-score/0.3.0-draft",
+  "$defs": {
+    "DifficultyFactor": {
+      "description": "Начальные факторы (D-043); начальные веса равны — см. `ai/config/difficulty.json`.",
+      "enum": [
+        "ambiguity",
+        "circumstances",
+        "services",
+        "additions",
+        "speech"
+      ],
+      "title": "DifficultyFactor",
+      "type": "string"
+    },
+    "FactorContribution": {
+      "additionalProperties": false,
+      "properties": {
+        "factor": {
+          "$ref": "#/$defs/DifficultyFactor"
+        },
+        "level": {
+          "enum": [
+            0,
+            1,
+            2
+          ],
+          "title": "Level",
+          "type": "integer"
+        },
+        "weight": {
+          "minimum": 0,
+          "title": "Weight",
+          "type": "number"
+        },
+        "contribution": {
+          "description": "level * weight — вклад фактора в сумму",
+          "minimum": 0,
+          "title": "Contribution",
+          "type": "number"
+        }
+      },
+      "required": [
+        "factor",
+        "level",
+        "weight",
+        "contribution"
+      ],
+      "title": "FactorContribution",
+      "type": "object"
+    },
+    "VersionRef": {
+      "additionalProperties": false,
+      "description": "Ссылка на версионируемый артефакт: сценарий, правила, рубрику, политику времени.",
+      "properties": {
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "version": {
+          "minLength": 1,
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version"
+      ],
+      "title": "VersionRef",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Результат расчёта: сумма видна по фактору (приёмка D-043).",
+  "properties": {
+    "scenario": {
+      "$ref": "#/$defs/VersionRef"
+    },
+    "weights_version": {
+      "minLength": 1,
+      "title": "Weights Version",
+      "type": "string"
+    },
+    "contributions": {
+      "items": {
+        "$ref": "#/$defs/FactorContribution"
+      },
+      "maxItems": 5,
+      "minItems": 5,
+      "title": "Contributions",
+      "type": "array"
+    },
+    "total": {
+      "minimum": 0,
+      "title": "Total",
+      "type": "number"
+    }
+  },
+  "required": [
+    "scenario",
+    "weights_version",
+    "contributions",
+    "total"
+  ],
+  "title": "DifficultyScore",
+  "type": "object"
+}

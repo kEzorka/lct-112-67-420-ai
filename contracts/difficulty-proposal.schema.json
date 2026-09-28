@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dds-ai/difficulty-proposal/0.3.0-draft",
+  "$defs": {
+    "DifficultyFactor": {
+      "description": "Начальные факторы (D-043); начальные веса равны — см. `ai/config/difficulty.json`.",
+      "enum": [
+        "ambiguity",
+        "circumstances",
+        "services",
+        "additions",
+        "speech"
+      ],
+      "title": "DifficultyFactor",
+      "type": "string"
+    },
+    "FactorProposal": {
+      "additionalProperties": false,
+      "description": "Предложение ИИ по одному фактору — с объяснением (D-043: «ИИ предлагает с объяснением»).",
+      "properties": {
+        "factor": {
+          "$ref": "#/$defs/DifficultyFactor"
+        },
+        "level": {
+          "enum": [
+            0,
+            1,
+            2
+          ],
+          "title": "Level",
+          "type": "integer"
+        },
+        "rationale": {
+          "minLength": 1,
+          "title": "Rationale",
+          "type": "string"
+        }
+      },
+      "required": [
+        "factor",
+        "level",
+        "rationale"
+      ],
+      "title": "FactorProposal",
+      "type": "object"
+    },
+    "ModelRef": {
+      "additionalProperties": false,
+      "description": "Версия модели и промпта, на которой принято решение (инвариант 6).",
+      "properties": {
+        "component": {
+          "minLength": 1,
+          "title": "Component",
+          "type": "string"
+        },
+        "model_name": {
+          "minLength": 1,
+          "title": "Model Name",
+          "type": "string"
+        },
+        "model_version": {
+          "minLength": 1,
+          "title": "Model Version",
+          "type": "string"
+        },
+        "prompt_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Prompt Version"
+        }
+      },
+      "required": [
+        "component",
+        "model_name",
+        "model_version"
+      ],
+      "title": "ModelRef",
+      "type": "object"
+    },
+    "VersionRef": {
+      "additionalProperties": false,
+      "description": "Ссылка на версионируемый артефакт: сценарий, правила, рубрику, политику времени.",
+      "properties": {
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "version": {
+          "minLength": 1,
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version"
+      ],
+      "title": "VersionRef",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Предложение вектора целиком; публикует преподаватель (это действие — вне ИИ-контура).",
+  "properties": {
+    "scenario": {
+      "$ref": "#/$defs/VersionRef"
+    },
+    "factors": {
+      "items": {
+        "$ref": "#/$defs/FactorProposal"
+      },
+      "maxItems": 5,
+      "minItems": 5,
+      "title": "Factors",
+      "type": "array"
+    },
+    "model_ref": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ModelRef"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "None — детерминированное правило, не модель"
+    }
+  },
+  "required": [
+    "scenario",
+    "factors"
+  ],
+  "title": "DifficultyProposal",
+  "type": "object"
+}

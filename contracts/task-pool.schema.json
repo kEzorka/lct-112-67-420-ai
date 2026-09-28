@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dds-ai/task-pool/0.3.0-draft",
+  "$defs": {
+    "PoolTask": {
+      "additionalProperties": false,
+      "description": "Задание опубликованного пула (D-045): рекомендатель не выбирает вне этого списка.",
+      "properties": {
+        "task_id": {
+          "minLength": 1,
+          "title": "Task Id",
+          "type": "string"
+        },
+        "dds_profile": {
+          "minLength": 1,
+          "title": "Dds Profile",
+          "type": "string"
+        },
+        "difficulty_band": {
+          "minLength": 1,
+          "title": "Difficulty Band",
+          "type": "string"
+        },
+        "difficulty_rank": {
+          "description": "Порядок сложности внутри dds_profile (0 — самый лёгкий)",
+          "minimum": 0,
+          "title": "Difficulty Rank",
+          "type": "integer"
+        },
+        "weak_groups": {
+          "default": [],
+          "description": "Группы рубрики, которые задание тренирует",
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Weak Groups",
+          "type": "array"
+        }
+      },
+      "required": [
+        "task_id",
+        "dds_profile",
+        "difficulty_band",
+        "difficulty_rank"
+      ],
+      "title": "PoolTask",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Пул, назначенный преподавателем (D-045); снимок фиксируется в `Recommendation` (C-08).",
+  "properties": {
+    "pool_snapshot_id": {
+      "format": "uuid",
+      "title": "Pool Snapshot Id",
+      "type": "string"
+    },
+    "dds_profile": {
+      "minLength": 1,
+      "title": "Dds Profile",
+      "type": "string"
+    },
+    "assigned_by": {
+      "minLength": 1,
+      "title": "Assigned By",
+      "type": "string"
+    },
+    "tasks": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/PoolTask"
+      },
+      "title": "Tasks",
+      "type": "array"
+    },
+    "published_at": {
+      "format": "date-time",
+      "title": "Published At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "pool_snapshot_id",
+    "dds_profile",
+    "assigned_by",
+    "published_at"
+  ],
+  "title": "TaskPool",
+  "type": "object"
+}

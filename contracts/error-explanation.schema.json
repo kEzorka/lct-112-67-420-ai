@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dds-ai/error-explanation/0.3.0-draft",
+  "$defs": {
+    "Evidence": {
+      "additionalProperties": false,
+      "description": "Проверяемое основание решения (D-031).",
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/EvidenceKind"
+        },
+        "ref": {
+          "description": "Идентификатор события, поля, реплики или правила",
+          "minLength": 1,
+          "title": "Ref",
+          "type": "string"
+        },
+        "excerpt": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Цитата из ответа ученика",
+          "title": "Excerpt"
+        },
+        "start_ms": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start Ms"
+        },
+        "end_ms": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "End Ms"
+        }
+      },
+      "required": [
+        "kind",
+        "ref"
+      ],
+      "title": "Evidence",
+      "type": "object"
+    },
+    "EvidenceKind": {
+      "enum": [
+        "event",
+        "transcript_span",
+        "card_field",
+        "rule"
+      ],
+      "title": "EvidenceKind",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Объяснение ошибки после завершения попытки (Q&A 8, D-041, D-045): ошибка → доказательство\n→ упражнение для исправления. Строится только из замечаний-ошибок ученика\n(`Remark.counts_as_error`), не из технических сбоев или неопределённости источника.",
+  "properties": {
+    "remark_id": {
+      "minLength": 1,
+      "title": "Remark Id",
+      "type": "string"
+    },
+    "error": {
+      "minLength": 1,
+      "title": "Error",
+      "type": "string"
+    },
+    "evidence": {
+      "items": {
+        "$ref": "#/$defs/Evidence"
+      },
+      "minItems": 1,
+      "title": "Evidence",
+      "type": "array"
+    },
+    "exercise": {
+      "minLength": 1,
+      "title": "Exercise",
+      "type": "string"
+    }
+  },
+  "required": [
+    "remark_id",
+    "error",
+    "evidence",
+    "exercise"
+  ],
+  "title": "ErrorExplanation",
+  "type": "object"
+}

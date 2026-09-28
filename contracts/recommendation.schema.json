@@ -50,6 +50,16 @@
       "title": "RecommendationStatus",
       "type": "string"
     },
+    "TeacherAction": {
+      "description": "Действие преподавателя над рекомендацией (C-08: аудит хранит и его).",
+      "enum": [
+        "accepted",
+        "replaced",
+        "disabled"
+      ],
+      "title": "TeacherAction",
+      "type": "string"
+    },
     "VersionRef": {
       "additionalProperties": false,
       "description": "Ссылка на версионируемый артефакт: сценарий, правила, рубрику, политику времени.",
@@ -74,6 +84,7 @@
     }
   },
   "additionalProperties": false,
+  "description": "Рекомендация следующего задания (D-045) с полным аудитом выбора (C-08).",
   "properties": {
     "recommendation_id": {
       "format": "uuid",
@@ -96,6 +107,16 @@
         }
       ],
       "title": "Profile Version Id"
+    },
+    "source_score_versions": {
+      "default": [],
+      "description": "Версии оценок, на которых построен исходный профиль (C-08)",
+      "items": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "title": "Source Score Versions",
+      "type": "array"
     },
     "pool_snapshot_id": {
       "format": "uuid",
@@ -148,6 +169,61 @@
       "default": false,
       "title": "Auto Applied",
       "type": "boolean"
+    },
+    "superseded": {
+      "default": false,
+      "description": "Ещё не применённая рекомендация устарела после пересчёта оценки (C-08)",
+      "title": "Superseded",
+      "type": "boolean"
+    },
+    "superseded_reason": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Superseded Reason"
+    },
+    "teacher_action": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/TeacherAction"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "teacher_action_by": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Teacher Action By"
+    },
+    "teacher_action_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Teacher Action At"
     },
     "created_at": {
       "format": "date-time",

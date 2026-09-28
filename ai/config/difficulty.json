@@ -1,0 +1,15 @@
+{
+  "weights_version": "difficulty-w01-draft-1",
+  "weights": {
+    "ambiguity": 1,
+    "circumstances": 1,
+    "services": 1,
+    "additions": 1,
+    "speech": 1
+  },
+  "bands": [
+    {"band": "low", "min_total": 0},
+    {"band": "medium", "min_total": 4},
+    {"band": "high", "min_total": 7}
+  ]
+}

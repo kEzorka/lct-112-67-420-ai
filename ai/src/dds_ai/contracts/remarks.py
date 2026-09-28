@@ -47,3 +47,14 @@ class Remark(Contract):
     def counts_as_error(self) -> bool:
         """Сбой техники и неопределённость эталона не увеличивают счётчик ошибок ученика."""
         return self.type not in NOT_STUDENT_ERRORS and self.severity is not Severity.INFO
+
+
+class ErrorExplanation(Contract):
+    """Объяснение ошибки после завершения попытки (Q&A 8, D-041, D-045): ошибка → доказательство
+    → упражнение для исправления. Строится только из замечаний-ошибок ученика
+    (`Remark.counts_as_error`), не из технических сбоев или неопределённости источника."""
+
+    remark_id: NonEmptyStr
+    error: NonEmptyStr
+    evidence: tuple[Evidence, ...] = Field(min_length=1)
+    exercise: NonEmptyStr
