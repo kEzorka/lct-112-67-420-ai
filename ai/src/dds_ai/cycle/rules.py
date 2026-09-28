@@ -21,6 +21,7 @@ from ..contracts.events import (
     CallState,
     CallStateChanged,
     CardOpened,
+    ComponentName,
     EventSource,
     ModelFailure,
     NotificationShown,
@@ -43,6 +44,7 @@ RULES = VersionRef(name="m1-rule-checks", version="1")
 OPEN_LIMIT_S = 30  # C-01, равенство допустимо
 PROCESSING_LIMIT_S = 180
 SEMANTIC_CRITERIA = frozenset({"card.circumstances", "manual.additions", "manual.grammar"})
+VOICE_PATH = frozenset({ComponentName.STT, ComponentName.TTS})
 
 
 class Channel(StrEnum):
@@ -81,6 +83,11 @@ def had_conversation(events: Sequence[AttemptEvent]) -> bool:
 def technical_violation(events: Sequence[AttemptEvent]) -> bool:
     """C-01: любой сбой после старта — флаг технического нарушения попытки."""
     return any(isinstance(e, ModelFailure) for e in events)
+
+
+def voice_path_failed(events: Sequence[AttemptEvent]) -> bool:
+    """В попытке был сбой голосового тракта (STT или TTS)."""
+    return any(isinstance(e, ModelFailure) and e.component in VOICE_PATH for e in events)
 
 
 def missing_steps(events: Sequence[AttemptEvent], channel: Channel) -> list[Step]:
@@ -429,6 +436,13 @@ class Evaluator:
                 "Звонка руководителю не было (C-02).",
             )
         if self.channel is Channel.TEXT:
+            if voice_path_failed(self.events):  # решение оркестратора M1-3
+                return _unverified(
+                    cid,
+                    CriterionStatus.TECHNICAL_ERROR,
+                    "Текстовый режим включён из-за сбоя голосового тракта: голосовой навык "
+                    "не подтверждается по технической причине (C-04, C-01).",
+                )
             return _unverified(
                 cid,
                 CriterionStatus.NOT_CHECKED,

@@ -33,3 +33,27 @@ python run_tts_bench.py --candidates piper-irina piper-denis silero-baya silero-
 - `run_tts_bench.py` меряет время до **полного** буфера синтеза, не до первого звука в
   потоковом смысле — `TTSProvider.synthesize()` не потоковый API.
 - Датасет (`dataset.py`) — синтетические учебные реплики, не билеты (D-050) и не эталон.
+
+## LLM-формулировка реплик руководителя (M3)
+
+Отчёт — [`docs/ai/bench/llm-cpu.md`](../../docs/ai/bench/llm-cpu.md). Стадии меряются
+раздельно: генерация, валидация, формулировка целиком (с очередью воркера и повтором),
+ход руководителя целиком. TTS и транспорт сюда не входят.
+
+```bash
+cd ai/bench
+python run_llm_bench.py --runs 20                          # фейк: проверка обвязки, не модели
+python run_llm_bench.py --runs 5 --fake-latency-ms 50
+
+pip install -e "ai[llm-llamacpp]"                          # runtime llama.cpp
+python run_llm_bench.py --provider llamacpp --model /models/candidate.gguf \
+    --model-version <из манифеста> --n-threads 6 --runs 20
+
+# Дымовой прогон адаптера на настоящем llama.cpp без весов-кандидатов:
+pip install gguf numpy
+python make_tiny_gguf.py /tmp/tiny.gguf                    # случайные веса, не модель
+python run_llm_bench.py --provider llamacpp --model /tmp/tiny.gguf --n-ctx 8192 --runs 5
+```
+
+Замер на крошечной модели показывает, что путь через runtime работает. О задержке или
+качестве настоящей LLM он ничего не говорит.

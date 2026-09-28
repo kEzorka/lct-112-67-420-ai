@@ -54,7 +54,7 @@ from ..ports import LLMProvider, MediaTransport, RoutingEngine, SemanticJudge, T
 from ..supervisor.dialogue import Conversation, DialResult, Supervisor, Turn
 from ..supervisor.phrasing import LLMPhraser
 from ..worker import InferenceWorker
-from .rules import Channel, Evaluator, Step, final_card_fields, missing_steps
+from .rules import VOICE_PATH, Channel, Evaluator, Step, final_card_fields, missing_steps
 
 SUPERVISOR_ROLE = "supervisor"
 TTS_FAILED = "tts_failed"
@@ -214,6 +214,27 @@ class TrainingSession:
         else:
             self._emit(turn)
         return turn
+
+    def switch_to_text(self, failure: FailureRecord) -> None:
+        """Голосовой тракт не восстановлен — помеченный текстовый режим (C-04).
+
+        Сбой пишется в журнал; активный вызов завершается медиатрактом, а разговор с тем же
+        состоянием продолжается текстом. Голосовые критерии получат `technical_error` (M1-3).
+        """
+        if failure.component not in VOICE_PATH:
+            raise ValueError(f"{failure.component} is not a voice path component")
+        if self.channel is Channel.TEXT:
+            raise RuntimeError("already in text mode")
+        self._failure(failure)
+        if self.call_id is not None:
+            self.log.append(
+                CallStateChanged,
+                source=EventSource.MEDIA,
+                call_id=self.call_id,
+                state=CallState.ENDED,
+            )
+            self.call_id = None
+        self.channel = Channel.TEXT
 
     def hang_up(self) -> None:
         if self.conversation is not None:
