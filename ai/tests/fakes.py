@@ -24,6 +24,20 @@ class FakeTTS:
         return text.encode("utf-8")
 
 
+class FakeSTT:
+    model_ref = ModelRef(component="stt", model_name="fake-stt", model_version="0")
+
+    def __init__(self, fail: bool = False):
+        self.fail = fail
+        self.calls: list[bytes] = []
+
+    def transcribe(self, audio: bytes, *, hints=()):
+        self.calls.append(audio)
+        if self.fail:
+            raise RuntimeError("transcription crashed")
+        return []
+
+
 def echo_draft(prompt: str) -> str:
     """Ответ «модели», которая формулирует реплику ровно как черновик."""
     action, draft = draft_of(prompt)

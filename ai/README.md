@@ -36,4 +36,4 @@ ai/scripts/check.sh          # ruff + pytest + актуальность JSON Sch
 | `data/synthetic/knowledge/` | Явно синтетический мини-корпус для pipeline/тестов; путь к настоящему корпусу — конфигурация вызывающего |
 | `bench/` | Бенчмарк STT/TTS и стадий LLM-формулировки на CPU (не в `pytest` по умолчанию — отдельные скрипты, см. `bench/README.md`) |
 | `tools/export_schemas.py` | Выгрузка JSON Schema в `/contracts` для бэкенда |
-| `tests/` | Тесты инвариантов раздела 5 и матрицы раздела 8, покрытых на M0–M3, M4a |
+| `tests/` | Тесты инвариантов раздела 5 и матрицы раздела 8, накоплены по вехам M0–M7 (441 тест, `ai/scripts/check.sh`); сводная карта строк матрицы раздела 8 по файлам — [`docs/ai/test-matrix.md`](../docs/ai/test-matrix.md), матрица C-04 — [`docs/ai/c04-matrix.md`](../docs/ai/c04-matrix.md) |

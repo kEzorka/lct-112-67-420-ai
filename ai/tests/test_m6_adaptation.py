@@ -192,6 +192,18 @@ def test_help_request_moves_attempt_to_supported_and_is_an_event(fire, rubric):
     assert not evaluation.track.counts_toward_independent_rating
 
 
+def test_help_request_opens_hints_immediately(fire):
+    """G-1: кнопка запроса помощи иначе бесполезна — подсказка доступна сразу после запроса,
+    без завершения попытки, но недоступна до запроса."""
+    s = TrainingSession(fire, mode=TrainingMode.INDEPENDENT)
+    with pytest.raises(HintDenied):
+        s.show_hint("подсказка до запроса помощи")
+    s.request_help()
+    s.show_hint("подсказка после запроса помощи")
+    hints = [e for e in s.events if isinstance(e, HintShown)]
+    assert [h.text for h in hints] == ["подсказка после запроса помощи"]
+
+
 def test_request_help_only_applies_to_independent_mode(fire):
     s = TrainingSession(fire, mode=TrainingMode.GUIDED)
     with pytest.raises(RuntimeError):
@@ -338,6 +350,28 @@ def test_default_weights_and_bands_are_consistent():
     assert band_for(7.0) == "high"
 
 
+def test_difficulty_weights_version_is_recorded_at_attempt_start(fire, rubric):
+    """G-4: версия весов сложности попадает в AttemptVersionSnapshot.difficulty_config;
+    зафиксирована при старте попытки (конструктор), а не подставляется задним числом."""
+    custom_weights = DifficultyWeights(
+        weights_version="difficulty-test-custom-1",
+        weights=dict.fromkeys(DifficultyFactor, 1.0),
+    )
+    s = TrainingSession(fire, difficulty_weights=custom_weights)
+    # G-4: значение уже зафиксировано в конструкторе, до сборки полного снимка.
+    assert s.difficulty_config.version == "difficulty-test-custom-1"
+
+    snapshot = s.version_snapshot(rubric)
+    assert snapshot.attempt_id == s.attempt_id
+    assert snapshot.difficulty_config.version == "difficulty-test-custom-1"
+
+
+def test_difficulty_weights_version_defaults_to_published_config(fire, rubric):
+    s = TrainingSession(fire)
+    assert s.difficulty_config.version == load_weights().weights_version
+    assert s.version_snapshot(rubric).difficulty_config.version == load_weights().weights_version
+
+
 # --- 6.9 профиль подготовки ----------------------------------------------------------------
 
 
@@ -409,6 +443,59 @@ def test_valid_attempts_build_group_levels_with_attempts_used(rubric):
     assert len(profile.source_score_versions) == 3
 
 
+def test_segment_level_hidden_below_min_attempts_threshold(rubric):
+    """G-3: уровень в отчёте преподавателю виден от 3 valid_score-попыток в сегменте;
+    меньше — insufficient_data, а не уровень по одной-двум попытках. Порог настраиваемый."""
+    trainee = uuid4()
+    two_records = [
+        AttemptRecord(
+            uuid4(), "dds-center", "low", AttemptTrack.INDEPENDENT, sv(rubric, uuid4()), rubric
+        )
+        for _ in range(2)
+    ]
+    profile_default = build_profile(
+        trainee,
+        two_records,
+        dds_profile="dds-center",
+        difficulty_band="low",
+        track=AttemptTrack.INDEPENDENT,
+        aggregation_rules=RULES,
+        now=T0,
+    )
+    assert profile_default.status is ProfileStatus.INSUFFICIENT_DATA
+    assert profile_default.groups == ()
+
+    profile_custom_threshold = build_profile(
+        trainee,
+        two_records,
+        dds_profile="dds-center",
+        difficulty_band="low",
+        track=AttemptTrack.INDEPENDENT,
+        aggregation_rules=RULES,
+        now=T0,
+        min_attempts=2,
+    )
+    assert profile_custom_threshold.status is ProfileStatus.OK
+
+    three_records = [
+        *two_records,
+        AttemptRecord(
+            uuid4(), "dds-center", "low", AttemptTrack.INDEPENDENT, sv(rubric, uuid4()), rubric
+        ),
+    ]
+    profile_at_threshold = build_profile(
+        trainee,
+        three_records,
+        dds_profile="dds-center",
+        difficulty_band="low",
+        track=AttemptTrack.INDEPENDENT,
+        aggregation_rules=RULES,
+        now=T0,
+    )
+    assert profile_at_threshold.status is ProfileStatus.OK
+    assert all(g.attempts_used == 3 for g in profile_at_threshold.groups)
+
+
 def test_profile_segments_are_isolated_by_dds_profile_difficulty_and_track(rubric):
     trainee = uuid4()
     center = AttemptRecord(
@@ -431,6 +518,7 @@ def test_profile_segments_are_isolated_by_dds_profile_difficulty_and_track(rubri
         track=AttemptTrack.INDEPENDENT,
         aggregation_rules=RULES,
         now=T0,
+        min_attempts=1,  # тест изоляции сегментов, не порога G-3
     )
     assert profile.status is ProfileStatus.OK
     assert all(g.attempts_used == 1 for g in profile.groups)
