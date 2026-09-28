@@ -17,8 +17,10 @@ from typing import Any
 from uuid import UUID, uuid4
 
 from ..contracts.card import CardField, CardRevisionRecord, FieldOrigin, FieldState
+from ..contracts.common import ModelRef, VersionRef
 from ..contracts.criteria import CriterionResult, RuleStatus
 from ..contracts.dialogue import ReplyMode, ScenarioCallState
+from ..contracts.difficulty import DifficultyWeights
 from ..contracts.events import (
     AckDeliveryUnconfirmed,
     AckGenerated,
@@ -47,8 +49,9 @@ from ..contracts.remarks import Remark
 from ..contracts.routing import RoutingRequest
 from ..contracts.rubric import Rubric
 from ..contracts.scenario import Scenario
-from ..contracts.scoring import ScoreSummary
+from ..contracts.scoring import AttemptVersionSnapshot, ScoreSummary
 from ..contracts.worker import FailureRecord, Lane
+from ..difficulty import load_weights
 from ..faults import ComponentFailure
 from ..hints.track import HintDenied, attempt_track, can_show_guided_hint
 from ..mocks.card_store import InMemoryCardStore
@@ -56,11 +59,11 @@ from ..mocks.event_log import InMemoryEventLog, ManualClock
 from ..mocks.routing import Rule, TableRoutingEngine
 from ..mocks.scoring import score
 from ..ports import LLMProvider, MediaTransport, RoutingEngine, SemanticJudge, TTSProvider
-from ..scenarios.card_generation import generate_card
+from ..scenarios.card_generation import CARD_SCHEMA, generate_card
 from ..supervisor.dialogue import Conversation, DialResult, Supervisor, Turn
 from ..supervisor.phrasing import LLMPhraser
 from ..worker import InferenceWorker
-from .rules import VOICE_PATH, Channel, Evaluator, Step, final_card_fields, missing_steps
+from .rules import RULES, VOICE_PATH, Channel, Evaluator, Step, final_card_fields, missing_steps
 
 SUPERVISOR_ROLE = "supervisor"
 TTS_FAILED = "tts_failed"
@@ -119,6 +122,7 @@ class TrainingSession:
         dispatcher_id: UUID | None = None,
         card_seed: int | None = None,
         mode: TrainingMode = TrainingMode.INDEPENDENT,
+        difficulty_weights: DifficultyWeights | None = None,
     ):
         if channel is Channel.VOICE and (tts is None or media is None):
             raise ValueError("voice channel requires tts and media")
@@ -131,6 +135,8 @@ class TrainingSession:
         self.log = InMemoryEventLog(self.attempt_id, self.clock)
         self.worker = worker or InferenceWorker.from_profile("cpu")
         self.routing = routing or synthetic_routing()
+        # G-4: веса сложности фиксируются при старте попытки, не при её оценке/анализе.
+        self.difficulty_weights = difficulty_weights or load_weights()
         self.cards = card_store or InMemoryCardStore()
         self.tts, self.media, self.judge = tts, media, judge
         if tts is not None:
@@ -156,10 +162,44 @@ class TrainingSession:
         self.submitted: SubmitAccepted | None = None
         if self.channel is Channel.VOICE:
             self._preflight_voice()
+        # G-4: снимок версий фиксируется здесь, при старте попытки, а не при оценке; ни одно
+        # из полей ниже не меняется до конца попытки (сценарий, маршрутизация и веса сложности
+        # неизменяемы после __init__), поэтому снимок, построенный сейчас, совпадает с тем, что
+        # был бы построен в любой другой момент этой же попытки.
+        self.difficulty_config = VersionRef(
+            name="difficulty-weights", version=self.difficulty_weights.weights_version
+        )
 
     @property
     def events(self):
         return self.log.events
+
+    def version_snapshot(
+        self, rubric: Rubric, *, models: tuple[ModelRef, ...] = ()
+    ) -> AttemptVersionSnapshot:
+        """`AttemptVersionSnapshot` (D-003, C-08, G-4): собран из версий, уже зафиксированных
+        при старте попытки — `difficulty_config` несёт версию весов сложности, использованных
+        для этой попытки (`self.difficulty_weights`), а не веса, актуальные на момент вызова.
+
+        `classifier` в этом синтетическом цикле не отделён от табличной маршрутизации (M1: нет
+        отдельного ML-классификатора) — оба поля ссылаются на версию таблицы правил.
+        """
+        routing_version = getattr(
+            self.routing, "version", VersionRef(name="routing_rules", version="external")
+        )
+        return AttemptVersionSnapshot(
+            attempt_id=self.attempt_id,
+            scenario=self.scenario.scenario,
+            reference=self.scenario.reference.reference,
+            card_schema=CARD_SCHEMA,
+            classifier=routing_version,
+            routing_rules=routing_version,
+            rubric=VersionRef(name="rubric", version=rubric.rubric_version),
+            time_policy=RULES,
+            difficulty_config=self.difficulty_config,
+            models=models,
+            created_at=self.clock(),
+        )
 
     @property
     def track(self) -> AttemptTrack:

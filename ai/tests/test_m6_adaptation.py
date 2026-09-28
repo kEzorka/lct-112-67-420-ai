@@ -350,6 +350,28 @@ def test_default_weights_and_bands_are_consistent():
     assert band_for(7.0) == "high"
 
 
+def test_difficulty_weights_version_is_recorded_at_attempt_start(fire, rubric):
+    """G-4: версия весов сложности попадает в AttemptVersionSnapshot.difficulty_config;
+    зафиксирована при старте попытки (конструктор), а не подставляется задним числом."""
+    custom_weights = DifficultyWeights(
+        weights_version="difficulty-test-custom-1",
+        weights=dict.fromkeys(DifficultyFactor, 1.0),
+    )
+    s = TrainingSession(fire, difficulty_weights=custom_weights)
+    # G-4: значение уже зафиксировано в конструкторе, до сборки полного снимка.
+    assert s.difficulty_config.version == "difficulty-test-custom-1"
+
+    snapshot = s.version_snapshot(rubric)
+    assert snapshot.attempt_id == s.attempt_id
+    assert snapshot.difficulty_config.version == "difficulty-test-custom-1"
+
+
+def test_difficulty_weights_version_defaults_to_published_config(fire, rubric):
+    s = TrainingSession(fire)
+    assert s.difficulty_config.version == load_weights().weights_version
+    assert s.version_snapshot(rubric).difficulty_config.version == load_weights().weights_version
+
+
 # --- 6.9 профиль подготовки ----------------------------------------------------------------
 
 
