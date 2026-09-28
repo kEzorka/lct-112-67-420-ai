@@ -33,9 +33,13 @@ from dds_ai.remarks import build_remarks, grammar_criterion
 from dds_ai.scenarios.card_generation import generate_card
 from dds_ai.worker import InferenceWorker
 
-from .fakes import FakeTTS
+from .fakes import FakeSTT, FakeTTS
 
 T0 = datetime(2026, 9, 28, 12, 0, tzinfo=UTC)
+FIRE_REPORT = (
+    "Пожар в жилом доме, ул. Тестовая, д. 12, кв. 5. Дым из окна квартиры. "
+    "ДДС реагирует, направляем пожарную охрану. Прошу принять доклад."
+)
 
 
 @pytest.fixture(scope="module")
@@ -102,6 +106,85 @@ def test_voice_preflight_ok_keeps_voice_channel(fire):
     s = TrainingSession(fire, channel=Channel.VOICE, tts=FakeTTS(), media=MockMediaTransport())
     assert s.channel is Channel.VOICE
     assert not any(isinstance(e, ModelFailure) for e in s.events)
+
+
+# --- F-3: STT входит в preflight, когда попытка использует голосовой канал со STT ----------
+
+
+def test_stt_preflight_failure_writes_model_failure_and_switches_text(fire):
+    worker = InferenceWorker.from_profile("cpu")
+    worker.injector.inject(ComponentName.STT, FailureKind.ERROR)
+    from dds_ai.mocks.media import MockMediaTransport
+
+    s = TrainingSession(
+        fire,
+        channel=Channel.VOICE,
+        stt=FakeSTT(),
+        tts=FakeTTS(),
+        media=MockMediaTransport(),
+        worker=worker,
+    )
+    assert s.channel is Channel.TEXT  # F-3/C-04: голосовой тракт не подтверждён без STT
+    failures = [e for e in s.events if isinstance(e, ModelFailure)]
+    stt_failures = [f for f in failures if f.component == ComponentName.STT]
+    assert stt_failures
+    assert stt_failures[0].source == "ai_worker"  # D-3: пишет воркер, не клиент
+
+
+def test_stt_preflight_ok_keeps_voice_channel(fire):
+    from dds_ai.mocks.media import MockMediaTransport
+
+    s = TrainingSession(
+        fire, channel=Channel.VOICE, stt=FakeSTT(), tts=FakeTTS(), media=MockMediaTransport()
+    )
+    assert s.channel is Channel.VOICE
+    assert not any(isinstance(e, ModelFailure) for e in s.events)
+
+
+def test_voice_without_stt_adapter_does_not_require_stt_in_preflight(fire):
+    """F-3: preflight требует STT только когда попытка действительно его использует — без
+    адаптера STT (мок-путь M1: реплики подаются готовым текстом) его отказ не должен мешать
+    попытке, которая STT не вызывает."""
+    worker = InferenceWorker.from_profile("cpu")
+    worker.injector.inject(ComponentName.STT, FailureKind.ERROR)
+    from dds_ai.mocks.media import MockMediaTransport
+
+    s = TrainingSession(
+        fire, channel=Channel.VOICE, tts=FakeTTS(), media=MockMediaTransport(), worker=worker
+    )
+    assert s.channel is Channel.VOICE
+    assert not any(isinstance(e, ModelFailure) for e in s.events)
+
+
+def test_stt_preflight_failure_makes_voice_criteria_technical_error(fire, rubric):
+    """F-3: провал STT preflight -> голосовые критерии technical_error (C-04), не штраф."""
+    worker = InferenceWorker.from_profile("cpu")
+    worker.injector.inject(ComponentName.STT, FailureKind.ERROR)
+    from dds_ai.mocks.media import MockMediaTransport
+
+    s = TrainingSession(
+        fire,
+        channel=Channel.VOICE,
+        stt=FakeSTT(),
+        tts=FakeTTS(),
+        media=MockMediaTransport(),
+        worker=worker,
+    )
+    assert s.channel is Channel.TEXT
+    s.notify()
+    s.clock.advance(20)
+    s.open_card()
+    s.edit_card(services=["fire_service", "ambulance"], description="Дым из окна квартиры.")
+    s.decide(DispatcherDecision.RESPOND)
+    s.dial()
+    s.say(FIRE_REPORT)
+    s.say("Да, верно.")
+    s.clock.advance(170)
+    s.submit()
+    evaluation = s.evaluate(rubric)
+    voice_results = [r for r in evaluation.results if r.criterion_id.startswith("voice.")]
+    assert voice_results
+    assert all(r.status is CriterionStatus.TECHNICAL_ERROR for r in voice_results)
 
 
 # --- структурное сравнение адреса -----------------------------------------------------------

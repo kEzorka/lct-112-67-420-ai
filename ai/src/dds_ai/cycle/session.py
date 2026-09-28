@@ -58,7 +58,14 @@ from ..mocks.card_store import InMemoryCardStore
 from ..mocks.event_log import InMemoryEventLog, ManualClock
 from ..mocks.routing import Rule, TableRoutingEngine
 from ..mocks.scoring import score
-from ..ports import LLMProvider, MediaTransport, RoutingEngine, SemanticJudge, TTSProvider
+from ..ports import (
+    LLMProvider,
+    MediaTransport,
+    RoutingEngine,
+    SemanticJudge,
+    STTProvider,
+    TTSProvider,
+)
 from ..scenarios.card_generation import CARD_SCHEMA, generate_card
 from ..supervisor.dialogue import Conversation, DialResult, Supervisor, Turn
 from ..supervisor.phrasing import LLMPhraser
@@ -114,6 +121,7 @@ class TrainingSession:
         routing: RoutingEngine | None = None,
         card_store: InMemoryCardStore | None = None,
         clock: ManualClock | None = None,
+        stt: STTProvider | None = None,
         tts: TTSProvider | None = None,
         media: MediaTransport | None = None,
         llm: LLMProvider | None = None,
@@ -138,7 +146,9 @@ class TrainingSession:
         # G-4: веса сложности фиксируются при старте попытки, не при её оценке/анализе.
         self.difficulty_weights = difficulty_weights or load_weights()
         self.cards = card_store or InMemoryCardStore()
-        self.tts, self.media, self.judge = tts, media, judge
+        self.stt, self.tts, self.media, self.judge = stt, tts, media, judge
+        if stt is not None:
+            self.worker.register(ComponentName.STT, stt)
         if tts is not None:
             self.worker.register(ComponentName.TTS, tts)
         phraser = None
@@ -376,10 +386,15 @@ class TrainingSession:
         )
 
     def _preflight_voice(self) -> None:
-        """D-3: провал preflight голосового тракта до старта — сбой пишет воркер (он владеет
-        preflight, 6.1), попытка сразу помечается текстовым режимом (C-04); до соединения,
-        поэтому без разбора активного звонка."""
-        report = self.worker.preflight([(ComponentName.TTS, Lane.INTERACTIVE)], voice_path_ok=True)
+        """D-3/F-3: провал preflight голосового тракта до старта — сбой пишет воркер (он
+        владеет preflight, 6.1), попытка сразу помечается текстовым режимом (C-04); до
+        соединения, поэтому без разбора активного звонка. STT входит в preflight только когда
+        попытка действительно использует голосовой канал со STT (F-3) — без адаптера STT
+        текстовый ввод реплик остаётся мок-путём M1 и preflight его не требует."""
+        required = [(ComponentName.TTS, Lane.INTERACTIVE)]
+        if self.stt is not None:
+            required.append((ComponentName.STT, Lane.INTERACTIVE))
+        report = self.worker.preflight(required, voice_path_ok=True)
         if report.ready:
             return
         for f in self.worker.preflight_failures(report, at=self.clock()):
