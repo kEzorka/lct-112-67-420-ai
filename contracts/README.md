@@ -20,3 +20,4 @@
 | `interlocutor`, `supervisor-reply` | ИИ-контур | ИИ-руководитель |
 | `skill-profile`, `recommendation` | бэкенд | ИИ-контур (рекомендатель) |
 | `adapter-policy`, `failure-record`, `preflight-report` | ИИ-воркер | ИИ-воркер; бэкенд показывает администратору |
+| `scenario` | бэкенд (публикация), ИИ-контур (черновики M4) | преподаватель утверждает; на M1 — синтетика в `ai/data/synthetic/` |

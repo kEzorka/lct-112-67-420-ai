@@ -1,0 +1,38 @@
+{
+  "scenario": {"name": "syn-003-repeat-refuse", "version": "1"},
+  "title": "СИНТЕТИКА: повторное сообщение о ликвидированном возгорании мусора — отказ, обрыв связи",
+  "provenance": "synthetic",
+  "incident_type": "trash_fire_repeat",
+  "published_facts": [
+    {"fact_id": "card.address", "topic": "address", "label": "Адрес", "state": "known", "value": "г. Учебный, ул. Модельная, д. 3"},
+    {"fact_id": "card.incident_type", "topic": "incident_type", "label": "Тип происшествия", "state": "known", "value": "возгорание мусора"},
+    {"fact_id": "card.description", "topic": "description", "label": "Описание", "state": "known", "value": "Повторное сообщение, возгорание уже ликвидировано"},
+    {"fact_id": "card.victims", "topic": "victims", "label": "Пострадавшие", "state": "not_applicable"}
+  ],
+  "interlocutors": [
+    {
+      "interlocutor": {
+        "role_id": "supervisor",
+        "published_fact_ids": [],
+        "allowed_actions": ["listen", "clarify", "read_back", "confirm_receipt"]
+      },
+      "report_items": [
+        {"item_id": "essence.repeat", "element": "essence", "patterns": ["мусор", "повторн"]},
+        {"item_id": "location.address", "element": "location", "patterns": ["модельн 3"]},
+        {"item_id": "circumstances.extinguished", "element": "circumstances", "patterns": ["ликвидир", "потушен"]},
+        {"item_id": "decision.refuse", "element": "dds_decision", "patterns": ["отказ"]},
+        {"item_id": "request.ack", "element": "requested_action", "patterns": ["прошу", "просим", "для сведени"]}
+      ],
+      "drop_after_turns": 2
+    }
+  ],
+  "reference": {
+    "reference": {"name": "syn-003-repeat-refuse.ref", "version": "1"},
+    "expected_decision": "refuse",
+    "expected_fields": {
+      "address": "г. Учебный, ул. Модельная, д. 3",
+      "incident_type": "возгорание мусора"
+    },
+    "not_applicable_criteria": ["routing.services"]
+  }
+}

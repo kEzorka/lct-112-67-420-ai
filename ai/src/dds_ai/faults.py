@@ -57,6 +57,10 @@ class FaultInjector:
     def inject(self, component: ComponentName, kind: FailureKind) -> None:
         self._faults[component] = kind
 
+    def fault_for(self, component: ComponentName) -> FailureKind | None:
+        """Внедрённый отказ компонента (для preflight и статуса)."""
+        return self._faults.get(component)
+
     def clear(self, component: ComponentName | None = None) -> None:
         if component is None:
             self._faults.clear()

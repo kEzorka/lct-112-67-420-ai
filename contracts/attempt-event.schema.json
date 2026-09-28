@@ -867,6 +867,98 @@
       "title": "NotificationShown",
       "type": "object"
     },
+    "ScenarioCallState": {
+      "description": "Сценарные состояния — не технический сбой.",
+      "enum": [
+        "busy",
+        "no_answer",
+        "dropped"
+      ],
+      "title": "ScenarioCallState",
+      "type": "string"
+    },
+    "ScenarioCallStateChanged": {
+      "additionalProperties": false,
+      "description": "Сценарное состояние вызова (занято, не отвечает, обрыв) — не технический сбой.",
+      "properties": {
+        "event_id": {
+          "format": "uuid",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "attempt_id": {
+          "format": "uuid",
+          "title": "Attempt Id",
+          "type": "string"
+        },
+        "seq": {
+          "description": "Порядковый номер в попытке, назначает бэкенд",
+          "minimum": 0,
+          "title": "Seq",
+          "type": "integer"
+        },
+        "server_ts": {
+          "format": "date-time",
+          "title": "Server Ts",
+          "type": "string"
+        },
+        "client_ts": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Client Ts"
+        },
+        "source": {
+          "$ref": "#/$defs/EventSource"
+        },
+        "type": {
+          "const": "scenario_call_state",
+          "default": "scenario_call_state",
+          "title": "Type",
+          "type": "string"
+        },
+        "call_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "None — текстовый режим",
+          "title": "Call Id"
+        },
+        "role_id": {
+          "minLength": 1,
+          "title": "Role Id",
+          "type": "string"
+        },
+        "state": {
+          "$ref": "#/$defs/ScenarioCallState"
+        }
+      },
+      "required": [
+        "event_id",
+        "attempt_id",
+        "seq",
+        "server_ts",
+        "source",
+        "role_id",
+        "state"
+      ],
+      "title": "ScenarioCallStateChanged",
+      "type": "object"
+    },
     "SelectedAction": {
       "additionalProperties": false,
       "properties": {
@@ -982,6 +1074,22 @@
           "default": "submit_accepted",
           "title": "Type",
           "type": "string"
+        },
+        "incomplete": {
+          "default": false,
+          "description": "«Завершить с невыполненными шагами» (C-02): не успех",
+          "title": "Incomplete",
+          "type": "boolean"
+        },
+        "missing_steps": {
+          "default": [],
+          "description": "Наблюдаемые пропуски; фиктивные события не создаются (C-02)",
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Missing Steps",
+          "type": "array"
         }
       },
       "required": [
@@ -1102,6 +1210,20 @@
           "format": "uuid",
           "title": "Utterance Id",
           "type": "string"
+        },
+        "ack_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Подтверждение в текстовом режиме; не голосовое (C-05)",
+          "title": "Ack Id"
         }
       },
       "required": [
@@ -1330,6 +1452,7 @@
       "hint_shown": "#/$defs/HintShown",
       "model_failure": "#/$defs/ModelFailure",
       "notification_shown": "#/$defs/NotificationShown",
+      "scenario_call_state": "#/$defs/ScenarioCallStateChanged",
       "selected_action": "#/$defs/SelectedAction",
       "submit_accepted": "#/$defs/SubmitAccepted",
       "submit_clicked": "#/$defs/SubmitClicked",
@@ -1363,6 +1486,9 @@
     },
     {
       "$ref": "#/$defs/CallStateChanged"
+    },
+    {
+      "$ref": "#/$defs/ScenarioCallStateChanged"
     },
     {
       "$ref": "#/$defs/Utterance"

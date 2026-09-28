@@ -1,0 +1,376 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dds-ai/scenario/0.1.0-draft",
+  "$defs": {
+    "CheckableItem": {
+      "additionalProperties": false,
+      "description": "Проверяемый элемент доклада. На M1 сопоставляется по ключевым словам.\n\nШаблон — основы слов через пробел; элемент найден, если в реплике есть все основы хотя бы\nодного шаблона. Числа и основы с `$` на конце («пожар$») сравниваются как слово целиком.",
+      "properties": {
+        "item_id": {
+          "minLength": 1,
+          "title": "Item Id",
+          "type": "string"
+        },
+        "element": {
+          "$ref": "#/$defs/ReportElement"
+        },
+        "required": {
+          "default": true,
+          "title": "Required",
+          "type": "boolean"
+        },
+        "patterns": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Patterns",
+          "type": "array"
+        }
+      },
+      "required": [
+        "item_id",
+        "element",
+        "patterns"
+      ],
+      "title": "CheckableItem",
+      "type": "object"
+    },
+    "DispatcherDecision": {
+      "enum": [
+        "respond",
+        "refuse",
+        "redirect"
+      ],
+      "title": "DispatcherDecision",
+      "type": "string"
+    },
+    "FieldState": {
+      "description": "«Неизвестно», «нет» и «не применимо» не сводятся к пустой строке или нулю.",
+      "enum": [
+        "known",
+        "unknown",
+        "none",
+        "not_applicable"
+      ],
+      "title": "FieldState",
+      "type": "string"
+    },
+    "Interlocutor": {
+      "additionalProperties": false,
+      "description": "Контракт собеседника: позже подключается канал оператора 112 (D-030).",
+      "properties": {
+        "role_id": {
+          "minLength": 1,
+          "title": "Role Id",
+          "type": "string"
+        },
+        "published_fact_ids": {
+          "default": [],
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Published Fact Ids",
+          "type": "array"
+        },
+        "allowed_actions": {
+          "items": {
+            "$ref": "#/$defs/SupervisorAction"
+          },
+          "minItems": 1,
+          "title": "Allowed Actions",
+          "type": "array"
+        }
+      },
+      "required": [
+        "role_id",
+        "allowed_actions"
+      ],
+      "title": "Interlocutor",
+      "type": "object"
+    },
+    "InterlocutorBrief": {
+      "additionalProperties": false,
+      "description": "Всё, что известно собеседнику (D-030): роль, его факты, элементы доклада, сценарий вызова.\n\nЭталон оценивания сюда не входит.",
+      "properties": {
+        "interlocutor": {
+          "$ref": "#/$defs/Interlocutor"
+        },
+        "facts": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/ScenarioFact"
+          },
+          "title": "Facts",
+          "type": "array"
+        },
+        "report_items": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/CheckableItem"
+          },
+          "title": "Report Items",
+          "type": "array"
+        },
+        "dial_outcomes": {
+          "default": [],
+          "description": "Сценарные исходы наборов номера до соединения: busy / no_answer",
+          "items": {
+            "$ref": "#/$defs/ScenarioCallState"
+          },
+          "title": "Dial Outcomes",
+          "type": "array"
+        },
+        "drop_after_turns": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Сценарный обрыв первого соединения после N реплик",
+          "title": "Drop After Turns"
+        },
+        "enabled": {
+          "default": true,
+          "description": "Голосовой канал оператора 112 выключен",
+          "title": "Enabled",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "interlocutor"
+      ],
+      "title": "InterlocutorBrief",
+      "type": "object"
+    },
+    "Provenance": {
+      "description": "Синтетический материал не называется реальным билетом (6.5).",
+      "enum": [
+        "synthetic",
+        "ticket"
+      ],
+      "title": "Provenance",
+      "type": "string"
+    },
+    "ReportElement": {
+      "description": "Проверяемые элементы доклада руководителю (6.4).",
+      "enum": [
+        "essence",
+        "location",
+        "circumstances",
+        "dds_decision",
+        "requested_action"
+      ],
+      "title": "ReportElement",
+      "type": "string"
+    },
+    "ScenarioCallState": {
+      "description": "Сценарные состояния — не технический сбой.",
+      "enum": [
+        "busy",
+        "no_answer",
+        "dropped"
+      ],
+      "title": "ScenarioCallState",
+      "type": "string"
+    },
+    "ScenarioFact": {
+      "additionalProperties": false,
+      "description": "Факт сценария. «Неизвестно», «нет», «не применимо» — состояния, а не пустые значения.",
+      "properties": {
+        "fact_id": {
+          "minLength": 1,
+          "title": "Fact Id",
+          "type": "string"
+        },
+        "topic": {
+          "description": "Имя поля карточки или тема факта: address, victims",
+          "minLength": 1,
+          "title": "Topic",
+          "type": "string"
+        },
+        "label": {
+          "description": "Как факт называется в реплике: «Число пострадавших»",
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "state": {
+          "$ref": "#/$defs/FieldState"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Value"
+        },
+        "question_patterns": {
+          "default": [],
+          "description": "Шаблоны вопроса о факте: основы слов через пробел, все должны встретиться",
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Question Patterns",
+          "type": "array"
+        }
+      },
+      "required": [
+        "fact_id",
+        "topic",
+        "label",
+        "state"
+      ],
+      "title": "ScenarioFact",
+      "type": "object"
+    },
+    "ScenarioReference": {
+      "additionalProperties": false,
+      "description": "Скрытый эталон: не виден обучаемому и не передаётся собеседникам (инвариант 1).",
+      "properties": {
+        "reference": {
+          "$ref": "#/$defs/VersionRef"
+        },
+        "expected_decision": {
+          "$ref": "#/$defs/DispatcherDecision"
+        },
+        "expected_fields": {
+          "additionalProperties": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "description": "Ожидаемые значения структурированных полей карточки после дополнения",
+          "propertyNames": {
+            "minLength": 1
+          },
+          "title": "Expected Fields",
+          "type": "object"
+        },
+        "not_applicable_criteria": {
+          "default": [],
+          "description": "Неприменимость критериев задаётся до старта (C-06)",
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Not Applicable Criteria",
+          "type": "array"
+        }
+      },
+      "required": [
+        "reference",
+        "expected_decision"
+      ],
+      "title": "ScenarioReference",
+      "type": "object"
+    },
+    "SupervisorAction": {
+      "enum": [
+        "listen",
+        "clarify",
+        "read_back",
+        "confirm_receipt"
+      ],
+      "title": "SupervisorAction",
+      "type": "string"
+    },
+    "VersionRef": {
+      "additionalProperties": false,
+      "description": "Ссылка на версионируемый артефакт: сценарий, правила, рубрику, политику времени.",
+      "properties": {
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "version": {
+          "minLength": 1,
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version"
+      ],
+      "title": "VersionRef",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "scenario": {
+      "$ref": "#/$defs/VersionRef"
+    },
+    "title": {
+      "minLength": 1,
+      "title": "Title",
+      "type": "string"
+    },
+    "provenance": {
+      "$ref": "#/$defs/Provenance"
+    },
+    "source_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Исходный билет; у производных вариантов — ссылка на него",
+      "title": "Source Ref"
+    },
+    "incident_type": {
+      "description": "Вход движка маршрутизации, не выбор служб",
+      "minLength": 1,
+      "title": "Incident Type",
+      "type": "string"
+    },
+    "published_facts": {
+      "items": {
+        "$ref": "#/$defs/ScenarioFact"
+      },
+      "minItems": 1,
+      "title": "Published Facts",
+      "type": "array"
+    },
+    "interlocutors": {
+      "items": {
+        "$ref": "#/$defs/InterlocutorBrief"
+      },
+      "minItems": 1,
+      "title": "Interlocutors",
+      "type": "array"
+    },
+    "reference": {
+      "$ref": "#/$defs/ScenarioReference"
+    }
+  },
+  "required": [
+    "scenario",
+    "title",
+    "provenance",
+    "incident_type",
+    "published_facts",
+    "interlocutors",
+    "reference"
+  ],
+  "title": "Scenario",
+  "type": "object"
+}

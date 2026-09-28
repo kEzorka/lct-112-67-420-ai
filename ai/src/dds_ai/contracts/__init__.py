@@ -10,6 +10,7 @@ from .profile import Recommendation, SkillProfile
 from .remarks import Remark
 from .routing import RoutingDecision, RoutingRequest
 from .rubric import Rubric
+from .scenario import Scenario
 from .scoring import AttemptVersionSnapshot, ScoreSummary, ScoreVersion
 from .worker import AdapterPolicy, FailureRecord, PreflightReport
 
@@ -35,6 +36,7 @@ SCHEMA_MODELS: dict[str, type[BaseModel] | TypeAdapter] = {
     "adapter-policy": AdapterPolicy,
     "failure-record": FailureRecord,
     "preflight-report": PreflightReport,
+    "scenario": Scenario,
 }
 
 __all__ = ["CONTRACTS_VERSION", "SCHEMA_MODELS", "AttemptEvent"]
