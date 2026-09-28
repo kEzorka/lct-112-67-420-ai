@@ -421,6 +421,59 @@ def test_valid_attempts_build_group_levels_with_attempts_used(rubric):
     assert len(profile.source_score_versions) == 3
 
 
+def test_segment_level_hidden_below_min_attempts_threshold(rubric):
+    """G-3: уровень в отчёте преподавателю виден от 3 valid_score-попыток в сегменте;
+    меньше — insufficient_data, а не уровень по одной-двум попытках. Порог настраиваемый."""
+    trainee = uuid4()
+    two_records = [
+        AttemptRecord(
+            uuid4(), "dds-center", "low", AttemptTrack.INDEPENDENT, sv(rubric, uuid4()), rubric
+        )
+        for _ in range(2)
+    ]
+    profile_default = build_profile(
+        trainee,
+        two_records,
+        dds_profile="dds-center",
+        difficulty_band="low",
+        track=AttemptTrack.INDEPENDENT,
+        aggregation_rules=RULES,
+        now=T0,
+    )
+    assert profile_default.status is ProfileStatus.INSUFFICIENT_DATA
+    assert profile_default.groups == ()
+
+    profile_custom_threshold = build_profile(
+        trainee,
+        two_records,
+        dds_profile="dds-center",
+        difficulty_band="low",
+        track=AttemptTrack.INDEPENDENT,
+        aggregation_rules=RULES,
+        now=T0,
+        min_attempts=2,
+    )
+    assert profile_custom_threshold.status is ProfileStatus.OK
+
+    three_records = [
+        *two_records,
+        AttemptRecord(
+            uuid4(), "dds-center", "low", AttemptTrack.INDEPENDENT, sv(rubric, uuid4()), rubric
+        ),
+    ]
+    profile_at_threshold = build_profile(
+        trainee,
+        three_records,
+        dds_profile="dds-center",
+        difficulty_band="low",
+        track=AttemptTrack.INDEPENDENT,
+        aggregation_rules=RULES,
+        now=T0,
+    )
+    assert profile_at_threshold.status is ProfileStatus.OK
+    assert all(g.attempts_used == 3 for g in profile_at_threshold.groups)
+
+
 def test_profile_segments_are_isolated_by_dds_profile_difficulty_and_track(rubric):
     trainee = uuid4()
     center = AttemptRecord(
@@ -443,6 +496,7 @@ def test_profile_segments_are_isolated_by_dds_profile_difficulty_and_track(rubri
         track=AttemptTrack.INDEPENDENT,
         aggregation_rules=RULES,
         now=T0,
+        min_attempts=1,  # тест изоляции сегментов, не порога G-3
     )
     assert profile.status is ProfileStatus.OK
     assert all(g.attempts_used == 1 for g in profile.groups)

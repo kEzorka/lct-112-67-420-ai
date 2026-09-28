@@ -1,4 +1,4 @@
-"""Профиль подготовки по пяти группам рубрики (D-044, 6.9, C-07, инвариант 13).
+"""Профиль подготовки по пяти группам рубрики (D-044, G-3, 6.9, C-07, инвариант 13).
 
 Вход — только `valid_score` попытки (эту фильтрацию делает сам `build_profile`: попытки
 `provisional`/`not_scored` не передаются вообще или отбрасываются) и экспертные поправки —
@@ -6,6 +6,10 @@
 просто передаёт актуальную версию (`AttemptRecord.score_version`), отдельного кода коррекции
 здесь не нужно: append-only история версий уже гарантирует, что «новая версия» и есть
 поправка.
+
+Уровень сегмента (для отчёта преподавателю) виден только от `min_attempts` `valid_score`-
+попыток в сегменте (по умолчанию 3, настраивается вызывающим кодом — G-3); меньше —
+`insufficient_data`, чтобы не показывать уровень по одной-двум попыткам.
 """
 
 from __future__ import annotations
@@ -21,6 +25,8 @@ from ..contracts.mode import AttemptTrack
 from ..contracts.profile import GroupLevel, ProfileStatus, SkillProfile
 from ..contracts.rubric import Rubric
 from ..contracts.scoring import ScoreVersion
+
+DEFAULT_MIN_SEGMENT_ATTEMPTS = 3
 
 
 @dataclass(frozen=True)
@@ -62,6 +68,7 @@ def build_profile(
     aggregation_rules: VersionRef,
     now: datetime,
     profile_version_id: UUID | None = None,
+    min_attempts: int = DEFAULT_MIN_SEGMENT_ATTEMPTS,
 ) -> SkillProfile:
     """Профиль одного сегмента (dds_profile × сложность × режим), только из `valid_score`.
 
@@ -69,12 +76,15 @@ def build_profile(
     фильтр `valid_score` и, значит, профиль не ухудшают (инвариант 13) — не потому, что их
     результат отбрасывается избирательно, а потому что такая попытка структурно не может
     получить `passed`/`not_passed` (C-06: непроверенный критерий → `provisional`).
+
+    Уровень сегмента не показывается при менее чем `min_attempts` `valid_score`-попыток в
+    сегменте (G-3, по умолчанию 3) — профиль остаётся `insufficient_data`.
     """
     segment = _segment(
         attempts, dds_profile=dds_profile, difficulty_band=difficulty_band, track=track
     )
     pv_id = profile_version_id or uuid4()
-    if not segment:
+    if len(segment) < min_attempts:
         return SkillProfile(
             profile_version_id=pv_id,
             trainee_id=trainee_id,
