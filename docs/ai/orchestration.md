@@ -32,7 +32,8 @@ Opus 5.5 — A, D. Sonnet 5 — B, C, E, F, G, H.
 | F | `ai/m5-evaluation` | `session_01CbG4VuAGHmBTbvusXJeSAN` | влит 28.09 |
 | G | `ai/m6-adaptation` | `session_013muMPeKQ52pucbBiZEs3B3` | влит 28.09 |
 | F2 | `ai/m5-calibration-2` | `session_013K9wZPYopsfjWR6LGpx3y9` | влит 28.09 (без 7B и отчёта — сессия прервалась) |
-| H | `ai/m7-evidence` | `session_016AHU675TGFJsUU23E9v2vT` | запущен 28.09 |
+| H | `ai/m7-evidence` | `session_016AHU675TGFJsUU23E9v2vT` | остановился без пуша 28.09 |
+| H2 | `ai/m7-evidence` | `session_016nV4eRDdeF69vgLCNgD3sS` | перезапуск H 28.09, пуш после каждого пункта |
 | V | `ai/bench-voice` | `session_01GhLvCd55XAbpvYE4JM3VGp` | влит 28.09 |
 
 ## Когда оркестратор зовёт человека
