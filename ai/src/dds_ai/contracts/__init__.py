@@ -13,6 +13,7 @@ from .remarks import Remark
 from .routing import RoutingDecision, RoutingRequest
 from .rubric import Rubric
 from .scenario import Scenario
+from .scenario_lifecycle import ScenarioDraftRecord
 from .scoring import AttemptVersionSnapshot, ScoreSummary, ScoreVersion
 from .worker import AdapterPolicy, FailureRecord, PreflightReport
 
@@ -42,6 +43,7 @@ SCHEMA_MODELS: dict[str, type[BaseModel] | TypeAdapter] = {
     "knowledge-fragment": KnowledgeFragment,
     "nlp-extraction": NlpExtraction,
     "scenario": Scenario,
+    "scenario-draft-record": ScenarioDraftRecord,
 }
 
 __all__ = ["CONTRACTS_VERSION", "SCHEMA_MODELS", "AttemptEvent"]

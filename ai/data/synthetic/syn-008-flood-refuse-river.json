@@ -1,0 +1,43 @@
+{
+  "scenario": {"name": "syn-008-flood-refuse-river", "version": "1"},
+  "title": "СИНТЕТИКА: повторный вызов об уже устранённой протечке — отказ, обрыв связи",
+  "provenance": "synthetic",
+  "incident_type": "flooding_apartment",
+  "dds_profile": "dds-river",
+  "published_facts": [
+    {"fact_id": "card.address", "topic": "address", "label": "Адрес", "state": "known", "value": "г. Учебный, наб. Прибрежная, д. 6"},
+    {"fact_id": "card.incident_type", "topic": "incident_type", "label": "Тип происшествия", "state": "known", "value": "подтопление помещения"},
+    {"fact_id": "card.description", "topic": "description", "label": "Описание", "state": "known", "value": "Повторное сообщение, протечка уже устранена аварийной службой"},
+    {"fact_id": "card.victims", "topic": "victims", "label": "Пострадавшие", "state": "not_applicable"}
+  ],
+  "interlocutors": [
+    {
+      "interlocutor": {
+        "role_id": "supervisor",
+        "published_fact_ids": [],
+        "allowed_actions": ["listen", "clarify", "read_back", "confirm_receipt"]
+      },
+      "report_items": [
+        {"item_id": "essence.repeat", "element": "essence", "patterns": ["подтопл", "повторн"]},
+        {"item_id": "location.address", "element": "location", "patterns": ["прибрежн 6"]},
+        {"item_id": "circumstances.fixed", "element": "circumstances", "patterns": ["устранен", "ликвидир"]},
+        {"item_id": "decision.refuse", "element": "dds_decision", "patterns": ["отказ"]},
+        {"item_id": "request.ack", "element": "requested_action", "patterns": ["прошу", "просим", "для сведени"]}
+      ],
+      "drop_after_turns": 2
+    },
+    {
+      "interlocutor": {"role_id": "operator_112", "allowed_actions": ["listen"]},
+      "enabled": false
+    }
+  ],
+  "reference": {
+    "reference": {"name": "syn-008-flood-refuse-river.ref", "version": "1"},
+    "expected_decision": "refuse",
+    "expected_fields": {
+      "address": "г. Учебный, наб. Прибрежная, д. 6",
+      "incident_type": "подтопление помещения"
+    },
+    "not_applicable_criteria": ["routing.services"]
+  }
+}

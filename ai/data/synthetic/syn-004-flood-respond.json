@@ -1,0 +1,45 @@
+{
+  "scenario": {"name": "syn-004-flood-respond", "version": "1"},
+  "title": "СИНТЕТИКА: прорыв трубы, заливает соседей снизу — ДДС реагирует",
+  "provenance": "synthetic",
+  "incident_type": "flooding_apartment",
+  "dds_profile": "dds-river",
+  "published_facts": [
+    {"fact_id": "card.address", "topic": "address", "label": "Адрес", "state": "known", "value": "г. Учебный, наб. Речная, д. 4, кв. 10", "variant_values": ["наб. Речная, дом 4, квартира 10, г. Учебный"]},
+    {"fact_id": "card.incident_type", "topic": "incident_type", "label": "Тип происшествия", "state": "known", "value": "подтопление помещения"},
+    {"fact_id": "card.description", "topic": "description", "label": "Описание", "state": "known", "value": "Заявитель сообщает о прорыве трубы, вода заливает соседей снизу"},
+    {"fact_id": "card.victims", "topic": "victims", "label": "Пострадавшие", "state": "none"},
+    {"fact_id": "card.floor", "topic": "floor", "label": "Этаж", "state": "known", "value": "3 этаж", "omissible": true}
+  ],
+  "interlocutors": [
+    {
+      "interlocutor": {
+        "role_id": "supervisor",
+        "published_fact_ids": ["sv.source"],
+        "allowed_actions": ["listen", "clarify", "read_back", "confirm_receipt"]
+      },
+      "facts": [
+        {"fact_id": "sv.source", "topic": "source", "label": "Источник протечки", "state": "known", "value": "стояк холодной воды", "question_patterns": ["источник", "откуда теч"]}
+      ],
+      "report_items": [
+        {"item_id": "essence.flood", "element": "essence", "patterns": ["подтопл", "залива", "прорыв труб"]},
+        {"item_id": "location.address", "element": "location", "patterns": ["речн 4"]},
+        {"item_id": "circumstances.leak", "element": "circumstances", "patterns": ["залива соседей сниз", "заливает соседей сниз"]},
+        {"item_id": "decision.respond", "element": "dds_decision", "patterns": ["реагир", "принял к исполн", "направ", "выслал"]},
+        {"item_id": "request.ack", "element": "requested_action", "patterns": ["прошу", "просим"]}
+      ]
+    },
+    {
+      "interlocutor": {"role_id": "operator_112", "allowed_actions": ["listen"]},
+      "enabled": false
+    }
+  ],
+  "reference": {
+    "reference": {"name": "syn-004-flood-respond.ref", "version": "1"},
+    "expected_decision": "respond",
+    "expected_fields": {
+      "address": "г. Учебный, наб. Речная, д. 4, кв. 10",
+      "incident_type": "подтопление помещения"
+    }
+  }
+}

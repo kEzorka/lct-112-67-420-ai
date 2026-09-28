@@ -40,6 +40,17 @@ class ScenarioFact(Contract):
     label: NonEmptyStr = Field(description="Как факт называется в реплике: «Число пострадавших»")
     state: FieldState
     value: str | None = None
+    variant_values: tuple[NonEmptyStr, ...] = Field(
+        default=(),
+        description=(
+            "Разрешённые равнозначные формулировки value для вариации карточки (6.5): "
+            "автор сценария заранее утверждает их как факт, генератор не придумывает новые"
+        ),
+    )
+    omissible: bool = Field(
+        default=False,
+        description="Известный факт может быть опущен в сгенерированной карточке (6.5)",
+    )
     question_patterns: tuple[NonEmptyStr, ...] = Field(
         default=(),
         description="Шаблоны вопроса о факте: основы слов через пробел, все должны встретиться",
@@ -51,6 +62,8 @@ class ScenarioFact(Contract):
             raise ValueError("known fact requires value")
         if self.state is not FieldState.KNOWN and self.value is not None:
             raise ValueError(f"{self.state} fact must not carry a value")
+        if self.state is not FieldState.KNOWN and self.variant_values:
+            raise ValueError(f"{self.state} fact must not carry variant_values")
         return self
 
 
@@ -118,6 +131,17 @@ class InterlocutorBrief(Contract):
         return self.interlocutor.role_id
 
 
+class CriterionRubricLink(Contract):
+    """Связь ожидаемого результата с критерием рубрики и источником (6.5, генератор эталона)."""
+
+    criterion_id: NonEmptyStr
+    group_id: NonEmptyStr
+    rationale: NonEmptyStr = Field(description="Понятное обоснование для критерия по эталону")
+    source_fragment_ids: tuple[NonEmptyStr, ...] = Field(
+        default=(), description="Фрагменты базы знаний (6.10), использованные при генерации"
+    )
+
+
 class ScenarioReference(Contract):
     """Скрытый эталон: не виден обучаемому и не передаётся собеседникам (инвариант 1)."""
 
@@ -130,6 +154,10 @@ class ScenarioReference(Contract):
     not_applicable_criteria: tuple[NonEmptyStr, ...] = Field(
         default=(), description="Неприменимость критериев задаётся до старта (C-06)"
     )
+    criteria_links: tuple[CriterionRubricLink, ...] = Field(
+        default=(),
+        description="Привязка ожидаемых действий/ответов к группам рубрики и источникам (6.5)",
+    )
 
 
 class Scenario(Contract):
@@ -140,6 +168,16 @@ class Scenario(Contract):
         default=None, description="Исходный билет; у производных вариантов — ссылка на него"
     )
     incident_type: NonEmptyStr = Field(description="Вход движка маршрутизации, не выбор служб")
+    dds_profile: NonEmptyStr = Field(
+        default="profile-1", description="Условный профиль ДДС пилота (D-019, W-03)"
+    )
+    diagnostic: bool = Field(
+        default=False,
+        description=(
+            "Диагностический сценарий на выявление неопределённости маршрута (C-03): "
+            "не даёт автоматического штрафа/балла за маршрут и не публикуется как обычный"
+        ),
+    )
     published_facts: tuple[ScenarioFact, ...] = Field(min_length=1)
     interlocutors: tuple[InterlocutorBrief, ...] = Field(min_length=1)
     reference: ScenarioReference
@@ -161,6 +199,13 @@ class Scenario(Contract):
         topics = [f.topic for f in self.published_facts]
         if len(topics) != len(set(topics)):
             raise ValueError("published fact topics must be unique (one card field each)")
+        known_topics = {f.topic for f in self.published_facts if f.state is FieldState.KNOWN}
+        unknown_expected = set(self.reference.expected_fields) - known_topics
+        if unknown_expected:
+            raise ValueError(
+                f"expected_fields reference topics without a known published fact: "
+                f"{sorted(unknown_expected)}"
+            )
         return self
 
     def brief(self, role_id: str) -> InterlocutorBrief:

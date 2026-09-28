@@ -1,0 +1,42 @@
+{
+  "scenario": {"name": "syn-005-transport-redirect", "version": "1"},
+  "title": "СИНТЕТИКА: заявка на плановую медицинскую перевозку — перенаправление, руководитель не отвечает",
+  "provenance": "synthetic",
+  "incident_type": "non_emergency_medical_transport",
+  "dds_profile": "dds-north",
+  "published_facts": [
+    {"fact_id": "card.address", "topic": "address", "label": "Адрес", "state": "known", "value": "г. Учебный, ул. Северная, д. 15, кв. 3"},
+    {"fact_id": "card.incident_type", "topic": "incident_type", "label": "Тип происшествия", "state": "known", "value": "заявка на плановую медицинскую перевозку"},
+    {"fact_id": "card.description", "topic": "description", "label": "Описание", "state": "known", "value": "Родственник просит плановую перевозку лежачего больного в поликлинику"},
+    {"fact_id": "card.victims", "topic": "victims", "label": "Пострадавшие", "state": "not_applicable"}
+  ],
+  "interlocutors": [
+    {
+      "interlocutor": {
+        "role_id": "supervisor",
+        "published_fact_ids": [],
+        "allowed_actions": ["listen", "clarify", "read_back", "confirm_receipt"]
+      },
+      "report_items": [
+        {"item_id": "essence.transport", "element": "essence", "patterns": ["план", "перевозк"]},
+        {"item_id": "location.address", "element": "location", "patterns": ["северн 15"]},
+        {"item_id": "circumstances.bedridden", "element": "circumstances", "patterns": ["лежач", "больн"]},
+        {"item_id": "decision.redirect", "element": "dds_decision", "patterns": ["перенаправ", "передал", "передаем", "переадрес"]},
+        {"item_id": "request.ack", "element": "requested_action", "patterns": ["прошу", "просим"]}
+      ],
+      "dial_outcomes": ["no_answer"]
+    },
+    {
+      "interlocutor": {"role_id": "operator_112", "allowed_actions": ["listen"]},
+      "enabled": false
+    }
+  ],
+  "reference": {
+    "reference": {"name": "syn-005-transport-redirect.ref", "version": "1"},
+    "expected_decision": "redirect",
+    "expected_fields": {
+      "address": "г. Учебный, ул. Северная, д. 15, кв. 3",
+      "incident_type": "заявка на плановую медицинскую перевозку"
+    }
+  }
+}

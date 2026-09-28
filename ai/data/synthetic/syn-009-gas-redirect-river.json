@@ -1,13 +1,13 @@
 {
-  "scenario": {"name": "syn-002-gas-redirect", "version": "1"},
-  "title": "СИНТЕТИКА: запах газа в подъезде — перенаправление, руководитель сначала занят",
+  "scenario": {"name": "syn-009-gas-redirect-river", "version": "1"},
+  "title": "СИНТЕТИКА: запах газа на набережной — перенаправление, руководитель сначала занят",
   "provenance": "synthetic",
   "incident_type": "gas_smell",
-  "dds_profile": "dds-center",
+  "dds_profile": "dds-river",
   "published_facts": [
-    {"fact_id": "card.address", "topic": "address", "label": "Адрес", "state": "known", "value": "г. Учебный, пр. Условный, д. 7, подъезд 2"},
+    {"fact_id": "card.address", "topic": "address", "label": "Адрес", "state": "known", "value": "г. Учебный, наб. Портовая, д. 2, подъезд 1"},
     {"fact_id": "card.incident_type", "topic": "incident_type", "label": "Тип происшествия", "state": "known", "value": "запах газа"},
-    {"fact_id": "card.description", "topic": "description", "label": "Описание", "state": "known", "value": "Сильный запах газа на лестничной площадке"},
+    {"fact_id": "card.description", "topic": "description", "label": "Описание", "state": "known", "value": "Слабый запах газа в подъезде у мусоропровода"},
     {"fact_id": "card.victims", "topic": "victims", "label": "Пострадавшие", "state": "none"}
   ],
   "interlocutors": [
@@ -22,19 +22,23 @@
       ],
       "report_items": [
         {"item_id": "essence.gas", "element": "essence", "patterns": ["запах газ", "утечк газ"]},
-        {"item_id": "location.address", "element": "location", "patterns": ["условн 7"]},
-        {"item_id": "circumstances.stairs", "element": "circumstances", "patterns": ["подъезд", "лестнич", "площадк"]},
+        {"item_id": "location.address", "element": "location", "patterns": ["портов 2"]},
+        {"item_id": "circumstances.chute", "element": "circumstances", "patterns": ["подъезд", "мусоропровод"]},
         {"item_id": "decision.redirect", "element": "dds_decision", "patterns": ["перенаправ", "передал", "передаем", "переадрес"]},
         {"item_id": "request.ack", "element": "requested_action", "patterns": ["прошу", "просим"]}
       ],
-      "dial_outcomes": ["busy", "no_answer"]
+      "dial_outcomes": ["busy"]
+    },
+    {
+      "interlocutor": {"role_id": "operator_112", "allowed_actions": ["listen"]},
+      "enabled": false
     }
   ],
   "reference": {
-    "reference": {"name": "syn-002-gas-redirect.ref", "version": "1"},
+    "reference": {"name": "syn-009-gas-redirect-river.ref", "version": "1"},
     "expected_decision": "redirect",
     "expected_fields": {
-      "address": "г. Учебный, пр. Условный, д. 7, подъезд 2",
+      "address": "г. Учебный, наб. Портовая, д. 2, подъезд 1",
       "incident_type": "запах газа"
     }
   }
