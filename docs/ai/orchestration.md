@@ -29,7 +29,7 @@ Opus 5.5 — A, D. Sonnet 5 — B, C, E, F, G, H.
 | C | `ai/m4a-knowledge` | `session_017K7J9rjUwT6DCBeuXWFvjo` | влит 28.09 (`76e61e5`) |
 | D | `ai/m3-llm` | `session_01FgBY1dsMVHh4kEk2DYfvdE` | влит 28.09 |
 | E | `ai/m4b-scenarios` | `session_01H2qy7VSMHpH3DBLGKFCqk9` | влит 28.09 |
-| F | `ai/m5-evaluation` | — | ждёт A, B, E |
+| F | `ai/m5-evaluation` | `session_01CbG4VuAGHmBTbvusXJeSAN` | запущен 28.09 (сеть открыта) |
 | G | `ai/m6-adaptation` | — | ждёт F |
 | H | `ai/m7-evidence` | — | ждёт всех |
 | V | `ai/bench-voice` | `session_01GhLvCd55XAbpvYE4JM3VGp` | запущен 28.09 — реальный замер STT/TTS после открытия сети |
