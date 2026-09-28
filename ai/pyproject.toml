@@ -15,6 +15,7 @@ voice-fasterwhisper = ["faster-whisper>=1.0"]
 voice-vosk = ["vosk>=0.3.45"]
 voice-silero = ["torch>=2.2"]
 voice-piper = ["piper-tts>=1.2"]
+llm-llamacpp = ["llama-cpp-python>=0.3"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

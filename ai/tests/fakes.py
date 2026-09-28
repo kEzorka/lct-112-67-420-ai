@@ -1,11 +1,13 @@
-"""Тестовые двойники адаптеров моделей. Настоящих моделей на M1 нет."""
+"""Тестовые двойники адаптеров моделей. Настоящих моделей в тестах нет."""
 
 from __future__ import annotations
 
+import json
 from collections.abc import Callable
 
 from dds_ai.contracts.common import Evidence, EvidenceKind, ModelRef
 from dds_ai.contracts.criteria import CriterionResult, CriterionStatus
+from dds_ai.llm import draft_of
 
 
 class FakeTTS:
@@ -22,11 +24,21 @@ class FakeTTS:
         return text.encode("utf-8")
 
 
+def echo_draft(prompt: str) -> str:
+    """Ответ «модели», которая формулирует реплику ровно как черновик."""
+    action, draft = draft_of(prompt)
+    return reply_json(action, draft)
+
+
+def reply_json(action: str, text: str) -> str:
+    return json.dumps({"action": action, "text": text}, ensure_ascii=False)
+
+
 class FakeLLM:
     model_ref = ModelRef(component="llm", model_name="fake-llm", model_version="0")
 
     def __init__(self, answer: Callable[[str], str] | None = None):
-        self.answer = answer or (lambda prompt: prompt.rsplit("Реплика: ", 1)[-1])
+        self.answer = answer or echo_draft
         self.prompts: list[str] = []
 
     def complete(self, prompt: str, *, max_tokens: int) -> str:

@@ -1,12 +1,15 @@
 """ИИ-руководитель: конечный автомат диалога (6.4, D-026, D-030, C-04).
 
 Автомат выбирает разрешённое действие (выслушать → уточнить → повторить понятое →
-подтвердить получение); текст реплики даёт проверенный шаблон, на M3 — LLM с тем же выбором.
+подтвердить получение); черновик реплики даёт проверенный шаблон. На M3 LLM, если подключена,
+формулирует этот черновик внутри того же действия (`phrasing.py`). Невалидная или недоступная
+LLM → шаблонная реплика (C-04). Отказ на инъекцию LLM не формулирует: это фиксированная реплика.
 
 Руководитель получает только `InterlocutorBrief` сценария: роль, свои факты, элементы доклада
 и сценарий вызова. Скрытого эталона оценивания у него нет (инвариант 1). Реплика обучаемого —
 реплика, а не команда: фразы про оценку, «правильный адрес» и инструкции не меняют состояние
 диалога (инвариант 2). На вопрос о неизвестном факте ответ — «неизвестно» (инвариант 3).
+Состояние меняется до формулировки, и выход LLM в него не возвращается.
 """
 
 from __future__ import annotations
@@ -23,14 +26,21 @@ from ..contracts.dialogue import (
     SupervisorAction,
     SupervisorReply,
 )
+from ..contracts.events import Speaker
 from ..contracts.scenario import InterlocutorBrief, ReportElement, ScenarioFact
 from ..contracts.worker import FailureRecord
-from ..faults import ComponentFailure
 from . import matching
-from .phrasing import LLMPhraser, validate_reply
+from .phrasing import LLMPhraser, PhraseOutcome, validate_reply
+from .prompting import FactLine, HistoryLine, PhraseRequest
 from .templates import FallbackTemplates
 
 MAX_CLARIFY_PER_ELEMENT = 2
+
+_FACT_STATE_WORDS = {
+    FieldState.UNKNOWN: "неизвестно",
+    FieldState.NONE: "нет",
+    FieldState.NOT_APPLICABLE: "не применимо",
+}
 
 _FACT_KEYS = {
     FieldState.KNOWN: "listen.fact_known",
@@ -66,6 +76,7 @@ class Turn:
     reply: SupervisorReply | None
     ack_id: UUID | None = None
     failures: tuple[FailureRecord, ...] = ()
+    llm: PhraseOutcome | None = None  # попытки формулировки и замер стадий (M3)
 
     @property
     def dropped(self) -> bool:
@@ -142,6 +153,8 @@ class Conversation:
         self.clarified: dict[ReportElement, int] = {}
         self.ack_id: UUID | None = None
         self._heard: list[str] = []  # реплики обучаемого в этом вызове (контекст для чисел)
+        self._history: list[HistoryLine] = []  # история вызова для промпта LLM (данные)
+        self._last: str | None = None  # последняя реплика обучаемого
 
     # --- состояние ------------------------------------------------------------------------
 
@@ -174,12 +187,15 @@ class Conversation:
         if self.phase is Phase.ENDED:
             raise RuntimeError("call has ended")
         self.turns += 1
+        self._last = text
         if self.drop_after_turns is not None and self.turns >= self.drop_after_turns:
             self.phase = Phase.ENDED  # сценарный обрыв, не технический сбой
             return Turn(kind=TurnKind.DROPPED, reply=None)
 
         if matching.is_injection(text):
-            return self._turn(TurnKind.REFUSAL, SupervisorAction.LISTEN, "listen.refusal")
+            return self._turn(
+                TurnKind.REFUSAL, SupervisorAction.LISTEN, "listen.refusal", llm=False
+            )
 
         self._heard.append(text)
         if self.phase is Phase.CONFIRMED:
@@ -194,7 +210,7 @@ class Conversation:
                 turn = self._turn(
                     TurnKind.CONFIRM, SupervisorAction.CONFIRM_RECEIPT, "confirm_receipt"
                 )
-                return Turn(turn.kind, turn.reply, self.ack_id, turn.failures)
+                return Turn(turn.kind, turn.reply, self.ack_id, turn.failures, turn.llm)
             if self._absorb(text):
                 return self._read_back()
             self.phase = Phase.LISTENING
@@ -272,27 +288,37 @@ class Conversation:
         key: str,
         *,
         used: tuple[ScenarioFact, ...] = (),
+        llm: bool = True,
         **fields: str,
     ) -> Turn:
         context = " ".join([*self._heard, *(f.value or "" for f in used)])
         draft = validate_reply(self.sv.templates.render(key, **fields), context)
         failures: tuple[FailureRecord, ...] = ()
         reply = None
+        outcome = None
         phraser = self.sv.phraser
-        if phraser is not None:
-            log = phraser.worker.injector.log
-            before = len(log)
-            try:
-                text = phraser.phrase(action, draft, context, attempt_id=self.sv.attempt_id)
+        if phraser is not None and llm:
+            request = PhraseRequest(
+                role_title=phraser.role_title,
+                action=action,
+                draft=draft,
+                facts=tuple(FactLine(f.label, f.value or _FACT_STATE_WORDS[f.state]) for f in used),
+                history=tuple(self._history),
+                last_utterance=self._last,
+            )
+            # Разрешённый контекст LLM — черновик и факты хода. Реплики диспетчера сюда не входят:
+            # всё, что из них нужно повторить, автомат уже положил в черновик.
+            facts = " ".join(f"{f.label} {f.value}" for f in request.facts)
+            outcome = phraser.phrase(request, facts, attempt_id=self.sv.attempt_id)
+            failures = outcome.failures
+            if outcome.text is not None:
                 reply = SupervisorReply(
                     action=action,
-                    text=text,
+                    text=outcome.text,
                     used_fact_ids=tuple(f.fact_id for f in used),
                     mode=ReplyMode.LLM,
                     model_ref=phraser.model_ref,
                 )
-            except ComponentFailure:
-                failures = tuple(log[before:])
         if reply is None:
             reply = SupervisorReply(
                 action=action,
@@ -302,4 +328,8 @@ class Conversation:
                 model_ref=self.sv.fallback_ref,
             )
         reply.check_against(self.brief.interlocutor)
-        return Turn(kind=kind, reply=reply, failures=failures)
+        if self._last is not None:
+            self._history.append(HistoryLine(Speaker.DISPATCHER, self._last))
+            self._last = None
+        self._history.append(HistoryLine(Speaker.SUPERVISOR, reply.text))
+        return Turn(kind=kind, reply=reply, failures=failures, llm=outcome)
