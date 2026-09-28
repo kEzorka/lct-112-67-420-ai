@@ -36,8 +36,17 @@ sys.path.insert(0, str(REPO_ROOT / "ai" / "src"))
 
 from dds_ai.contracts.common import ModelRef  # noqa: E402
 from dds_ai.faults import InvalidOutput  # noqa: E402
+from dds_ai.judging.policy import JudgePolicy  # noqa: E402
 from dds_ai.judging.schema import MatchLevel  # noqa: E402
 from dds_ai.judging.semantic_judge import LLMSemanticJudge  # noqa: E402
+
+# Калибровка измеряет качество классификации модели (full/partial/none/unclear), а не
+# приложенческую политику F-2 (`JudgePolicy`, по умолчанию пустая — модель одна не выносит
+# `failed`). Иначе `none` и `unclear` слились бы в один бакет `not_checked`, и отчёт перестал
+# бы показывать, распознаёт ли модель `none` вообще (см. «Главное наблюдение» в отчёте).
+CALIBRATION_POLICY = JudgePolicy(
+    failable_criteria=frozenset({"card.circumstances", "manual.additions"})
+)
 
 W03_THRESHOLDS = {
     "agreement": 0.85,
@@ -98,19 +107,27 @@ def find_model() -> Path | None:
     return candidates[0] if candidates else None
 
 
-def build_judge(*, force_fake: bool, model_path: Path | None) -> tuple[LLMSemanticJudge, bool]:
+def build_judge(
+    *,
+    force_fake: bool,
+    model_path: Path | None,
+    timeout_s: float = 30,
+    n_threads: int | None = None,
+) -> tuple[LLMSemanticJudge, bool]:
     if not force_fake:
         path = model_path or find_model()
         if path is not None:
             try:
                 from dds_ai.llm.llamacpp_provider import LlamaCppProvider
 
-                llm = LlamaCppProvider(path, timeout_s=30, json_grammar=False)
-                return LLMSemanticJudge(llm), True
+                llm = LlamaCppProvider(
+                    path, timeout_s=timeout_s, n_threads=n_threads, json_grammar=False
+                )
+                return LLMSemanticJudge(llm, policy=CALIBRATION_POLICY), True
             except Exception as exc:  # pragma: no cover - зависит от окружения
                 msg = f"# не удалось загрузить {path}: {exc}; фолбэк на скриптовый ответ"
                 print(msg, file=sys.stderr)
-    return LLMSemanticJudge(ScriptedFallbackLLM()), False
+    return LLMSemanticJudge(ScriptedFallbackLLM(), policy=CALIBRATION_POLICY), False
 
 
 def run_case(judge: LLMSemanticJudge, case) -> dict:
@@ -181,6 +198,26 @@ def compute_metrics(rows: list[dict]) -> dict:
     return {
         "overall": metrics_for(rows),
         "by_criterion": {cid: metrics_for(rs) for cid, rs in sorted(by_criterion.items())},
+        "latency_s": _latency_stats(rows),
+    }
+
+
+def _latency_stats(rows: list[dict]) -> dict:
+    values = sorted(r["latency_s"] for r in rows)
+    n = len(values)
+    if n == 0:
+        return {"n": 0, "min": None, "median": None, "p95": None, "max": None}
+
+    def pct(p: float) -> float:
+        idx = min(n - 1, max(0, round(p * (n - 1))))
+        return values[idx]
+
+    return {
+        "n": n,
+        "min": round(values[0], 2),
+        "median": round(pct(0.5), 2),
+        "p95": round(pct(0.95), 2),
+        "max": round(values[-1], 2),
     }
 
 
@@ -193,9 +230,16 @@ def main() -> None:
     ap.add_argument("--fake", action="store_true", help="принудительно скриптовый ответчик")
     ap.add_argument("--model", type=Path, default=None)
     ap.add_argument("--json", type=Path, default=None)
+    ap.add_argument("--timeout-s", type=float, default=30, help="срок генерации одного вызова")
+    ap.add_argument("--n-threads", type=int, default=None, help="потоки CPU (по умолчанию авто)")
     args = ap.parse_args()
 
-    judge, real_model = build_judge(force_fake=args.fake, model_path=args.model)
+    judge, real_model = build_judge(
+        force_fake=args.fake,
+        model_path=args.model,
+        timeout_s=args.timeout_s,
+        n_threads=args.n_threads,
+    )
     cases = list(FIELD_CASES) + list(CONVERSATION_CASES)
     rows = [run_case(judge, c) for c in cases]
     metrics = compute_metrics(rows)

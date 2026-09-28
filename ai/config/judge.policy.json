@@ -1,0 +1,4 @@
+{
+  "_comment": "F-2 (волна 3, docs/ai/progress.md): критерии field_fact, где семантическому оценивателю разрешено самостоятельно выносить failed при уверенном none. Пусто, пока согласие оценивателя ниже порога W-03 (docs/ai/calibration-report.md) — уверенное «нет» уходит в not_checked и ждёт эксперта.",
+  "failable_criteria": []
+}
