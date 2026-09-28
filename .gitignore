@@ -1,0 +1,12 @@
+.codex_tmp/
+.DS_Store
+__pycache__/
+*.pyc
+.venv/
+.env
+.env.*
+models/
+*.onnx
+*.gguf
+*.bin
+*.wav
