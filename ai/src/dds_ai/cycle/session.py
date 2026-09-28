@@ -40,6 +40,7 @@ from ..contracts.events import (
     TextDelivered,
     Utterance,
 )
+from ..contracts.remarks import Remark
 from ..contracts.routing import RoutingRequest
 from ..contracts.rubric import Rubric
 from ..contracts.scenario import Scenario
@@ -48,10 +49,10 @@ from ..contracts.worker import FailureRecord, Lane
 from ..faults import ComponentFailure
 from ..mocks.card_store import InMemoryCardStore
 from ..mocks.event_log import InMemoryEventLog, ManualClock
-from ..mocks.operator112 import build_source_card
 from ..mocks.routing import Rule, TableRoutingEngine
 from ..mocks.scoring import score
 from ..ports import LLMProvider, MediaTransport, RoutingEngine, SemanticJudge, TTSProvider
+from ..scenarios.card_generation import generate_card
 from ..supervisor.dialogue import Conversation, DialResult, Supervisor, Turn
 from ..supervisor.phrasing import LLMPhraser
 from ..worker import InferenceWorker
@@ -89,6 +90,7 @@ class IncompleteSubmission(Exception):
 class Evaluation:
     results: tuple[CriterionResult, ...]
     summary: ScoreSummary
+    remarks: tuple[Remark, ...] = ()
 
     def by_id(self, criterion_id: str) -> CriterionResult:
         return next(r for r in self.results if r.criterion_id == criterion_id)
@@ -110,6 +112,7 @@ class TrainingSession:
         judge: SemanticJudge | None = None,
         attempt_id: UUID | None = None,
         dispatcher_id: UUID | None = None,
+        card_seed: int | None = None,
     ):
         if channel is Channel.VOICE and (tts is None or media is None):
             raise ValueError("voice channel requires tts and media")
@@ -135,11 +138,17 @@ class TrainingSession:
             phraser=phraser,
             attempt_id=self.attempt_id,
         )
-        self.card = build_source_card(scenario, created_at=self.clock())
+        # E-1: карточка — через генератор со сценарной вариацией (6.5, D-003), не фиксированный
+        # мок; seed по умолчанию — от attempt_id, поэтому один и тот же attempt воспроизводит
+        # ту же карточку без явного seed, а разные попытки естественно получают вариации.
+        self.card_seed = card_seed if card_seed is not None else self.attempt_id.int % 2_147_483_647
+        self.card = generate_card(scenario, seed=self.card_seed, created_at=self.clock())
         self.cards.put_source(self.card)
         self.conversation: Conversation | None = None
         self.call_id: UUID | None = None
         self.submitted: SubmitAccepted | None = None
+        if self.channel is Channel.VOICE:
+            self._preflight_voice()
 
     @property
     def events(self):
@@ -275,7 +284,9 @@ class TrainingSession:
             attempt_id=self.attempt_id,
         )
         results = tuple(evaluator.results(rubric))
-        return Evaluation(results=results, summary=score(rubric, results))
+        return Evaluation(
+            results=results, summary=score(rubric, results), remarks=evaluator.remarks()
+        )
 
     # --- события ИИ-воркера и медиатракта --------------------------------------------------
 
@@ -287,6 +298,17 @@ class TrainingSession:
             role_id=SUPERVISOR_ROLE,
             state=state,
         )
+
+    def _preflight_voice(self) -> None:
+        """D-3: провал preflight голосового тракта до старта — сбой пишет воркер (он владеет
+        preflight, 6.1), попытка сразу помечается текстовым режимом (C-04); до соединения,
+        поэтому без разбора активного звонка."""
+        report = self.worker.preflight([(ComponentName.TTS, Lane.INTERACTIVE)], voice_path_ok=True)
+        if report.ready:
+            return
+        for f in self.worker.preflight_failures(report, at=self.clock()):
+            self._failure(f)
+        self.channel = Channel.TEXT
 
     def _end_call(self, source: EventSource) -> None:
         if self.call_id is not None:

@@ -12,7 +12,7 @@ from enum import StrEnum
 from typing import Any
 from uuid import UUID
 
-from ..contracts.card import CardField, FieldState
+from ..contracts.card import CardField, FieldOrigin, FieldState
 from ..contracts.common import Evidence, EvidenceKind, VersionRef
 from ..contracts.criteria import CriterionResult, CriterionStatus, PartialReason
 from ..contracts.dialogue import ScenarioCallState
@@ -31,19 +31,24 @@ from ..contracts.events import (
     SubmitAccepted,
     Utterance,
 )
+from ..contracts.remarks import Remark
 from ..contracts.routing import RoutingDecision
 from ..contracts.rubric import Rubric
 from ..contracts.scenario import InterlocutorBrief, ReportElement, Scenario
 from ..evaluation import judge_criterion
 from ..faults import FaultInjector
+from ..judging.address_compare import AddressMatch
+from ..judging.address_compare import compare as compare_address
 from ..ports import SemanticJudge
+from ..remarks import build_remarks, grammar_criterion
 from ..supervisor import matching
 from ..supervisor.ack import summarize_acks
 
 RULES = VersionRef(name="m1-rule-checks", version="1")
 OPEN_LIMIT_S = 30  # C-01, равенство допустимо
 PROCESSING_LIMIT_S = 180
-SEMANTIC_CRITERIA = frozenset({"card.circumstances", "manual.additions", "manual.grammar"})
+# manual.grammar — правило по замечаниям локальной проверки (remarks.grammar_criterion), не LLM.
+SEMANTIC_CRITERIA = frozenset({"card.circumstances", "manual.additions"})
 VOICE_PATH = frozenset({ComponentName.STT, ComponentName.TTS})
 
 
@@ -209,6 +214,16 @@ class Evaluator:
                 out.append(self.criterion(c.criterion_id))
         return out
 
+    def remarks(self) -> tuple[Remark, ...]:
+        """Замечания попытки (D-037): грамматика ручного ввода, технические сбои,
+        неопределённость источника маршрутизации."""
+        return build_remarks(
+            card_fields=self.card,
+            events=self.events,
+            routing=self.routing,
+            attempt_id=self.submit.attempt_id,
+        )
+
     def criterion(self, cid: str) -> CriterionResult:
         if cid in self.s.reference.not_applicable_criteria:
             return _unverified(
@@ -227,6 +242,7 @@ class Evaluator:
             "voice.call_made": self._call_made,
             "voice.facts_transferred": self._facts_transferred,
             "voice.ack_received": self._ack_received,
+            "manual.grammar": self._grammar,
         }.get(cid)
         if check is None:
             return _unverified(cid, CriterionStatus.NOT_CHECKED, "Для критерия нет правила M1.")
@@ -386,17 +402,40 @@ class Evaluator:
         return self.card.get(name), self.s.reference.expected_fields.get(name)
 
     def _address(self, cid: str) -> CriterionResult:
+        """Точное сравнение с нормализацией (D-034); при расхождении — структурное сравнение
+        по компонентам (M5, `judging.address_compare`), не строкой целиком: неполный адрес
+        (без дома/квартиры) отличается от неверного (другой населённый пункт/улица/дом)."""
         field, expected = self._field("address")
         if field is None or expected is None or field.state is not FieldState.KNOWN:
             return _unverified(cid, CriterionStatus.NOT_CHECKED, "Нет данных для сравнения адреса.")
         ev = Evidence(kind=EvidenceKind.CARD_FIELD, ref="address", excerpt=str(field.raw))
         if _norm(field.raw) == _norm(expected):
             return _verified(cid, CriterionStatus.PASSED, [ev], "Адрес совпадает.")
+        cmp = compare_address(str(field.raw), expected)
+        if cmp.match is AddressMatch.EXACT:
+            return _verified(cid, CriterionStatus.PASSED, [ev], "Адрес совпадает по структуре.")
+        if cmp.match is AddressMatch.INCOMPLETE:
+            return _verified(
+                cid,
+                CriterionStatus.PASSED,
+                [ev],
+                f"Адрес неполный: не указано «{cmp.labels(cmp.missing_groups)}» — остальное "
+                "совпадает с эталоном (W-01, 0,5).",
+                value=0.5,
+                partial=PartialReason.INACCURATE_FIELD,
+            )
+        if cmp.match is AddressMatch.WRONG:
+            return _verified(
+                cid,
+                CriterionStatus.FAILED,
+                [ev],
+                f"Адрес неверный: не совпадает «{cmp.labels(cmp.differing_groups)}» — "
+                "критическая ошибка W-01.",
+            )
         return _unverified(
             cid,
             CriterionStatus.NOT_CHECKED,
-            "Адрес отличается от эталона: неполный или неверный — решает структурное "
-            "сравнение (M5) или эксперт, не правило M1.",
+            "Не удалось разобрать структуру адреса для сравнения — решает эксперт.",
         )
 
     def _incident_type(self, cid: str) -> CriterionResult:
@@ -408,16 +447,60 @@ class Evaluator:
             return _verified(cid, CriterionStatus.PASSED, [ev], "Тип происшествия верный.")
         return _verified(cid, CriterionStatus.FAILED, [ev], "Тип происшествия неверный.")
 
+    def _dispatcher_text(self, name: str) -> str | None:
+        field = self.card.get(name)
+        if field is None or field.origin is not FieldOrigin.DISPATCHER:
+            return None
+        if field.state is not FieldState.KNOWN or not isinstance(field.raw, str):
+            return None
+        return field.raw
+
+    def _fact_options(self, *, exclude_topics: frozenset[str]) -> list[dict]:
+        return [
+            {"label": f.label, "values": [f.value, *f.variant_values]}
+            for f in self.s.published_facts
+            if f.topic not in exclude_topics and f.state is FieldState.KNOWN
+        ]
+
     def _semantic(self, cid: str) -> CriterionResult:
+        """D-034: структурированные поля — точное сравнение (правило); свободный текст —
+        семантически по фактам эталона (M5, `judging.LLMSemanticJudge`). Проверяются только
+        поля, которые фактически заполнил/изменил диспетчер — исходный дефект карточки от
+        ИИ-оператора 112 не штрафуется (не заданное диспетчеру исправление)."""
         if self.judge is None:
             return _unverified(
                 cid,
                 CriterionStatus.NOT_CHECKED,
                 "Семантический оцениватель не подключён (M5): ожидает эксперта.",
             )
+        dedicated = frozenset({"address", "incident_type", "services"})
+        if cid == "card.circumstances":
+            field_name = "description"
+            student_text = self._dispatcher_text(field_name)
+            exclude = dedicated
+        elif cid == "manual.additions":
+            others = {
+                name: f.raw
+                for name, f in self.card.items()
+                if f.origin is FieldOrigin.DISPATCHER
+                and f.state is FieldState.KNOWN
+                and isinstance(f.raw, str)
+                and name not in dedicated | {"description"}
+            }
+            if others:
+                field_name, student_text = sorted(others.items())[0]
+            else:
+                field_name, student_text = "manual", None
+            exclude = dedicated | {"description"}
+        else:
+            return _unverified(
+                cid, CriterionStatus.NOT_CHECKED, "Нет контекста для семантической проверки."
+            )
         context = {
-            "card_fields": {k: v.model_dump(mode="json") for k, v in self.card.items()},
-            "expected_fields": dict(self.s.reference.expected_fields),
+            "kind": "field_fact",
+            "field_name": field_name,
+            "student_text": student_text,
+            "expected_facts": self._fact_options(exclude_topics=exclude),
         }
         return judge_criterion(
             self.judge,
@@ -427,6 +510,11 @@ class Evaluator:
             attempt_id=self.attempt_id,
             worker=self.worker,
         )
+
+    def _grammar(self, cid: str) -> CriterionResult:
+        """manual.grammar — правило по локальной проверке грамотности (`grammar.checker`), не
+        LLM: замечание содержит фрагмент и исправление, текст ученика не меняется (инв. 10)."""
+        return grammar_criterion(self.card, self.remarks())
 
     # --- разговор с руководителем (D-036, C-05) ---------------------------------------------
 
@@ -469,39 +557,70 @@ class Evaluator:
         return _verified(cid, CriterionStatus.PASSED, [_ev(calls[0])], "Звонок руководителю.")
 
     def _facts_transferred(self, cid: str) -> CriterionResult:
+        """D-036: сначала быстрое совпадение по ключевым словам (M1); то, что оно не находит,
+        — не штраф, а попытка семантической проверки (M5, паравраза/лёгкое повреждение
+        транскрипта учитываются). Она никогда не понижает до `failed` — только подтверждает
+        (`passed`) или оставляет «не проверено» (устойчивость к STT, раздел 8 промпта)."""
         pre = self._voice_precheck(cid)
         if pre is not None:
             return pre
         brief = self.s.brief("supervisor")
         covered, cited = report_coverage(brief, self.events)
-        if not dispatcher_utterances(self.events):
+        utterances = dispatcher_utterances(self.events)
+        if not utterances:
             return _verified(
                 cid,
                 CriterionStatus.NOT_DONE,
                 [_ev(self.submit, "доклада не было")],
                 "Доклад руководителю не передан.",
             )
-        missing = sorted(
-            {
-                i.element.value
-                for i in brief.report_items
-                if i.required and i.item_id not in covered
-            },
+        missing_items = [i for i in brief.report_items if i.required and i.item_id not in covered]
+        if not missing_items:
+            return _verified(
+                cid,
+                CriterionStatus.PASSED,
+                [_ev(u, u.text) for u in cited],
+                "Переданы суть, место, обстоятельства, решение ДДС и запрос.",
+            )
+        missing_labels = sorted(
+            {i.element.value for i in missing_items},
             key=lambda e: list(ReportElement).index(ReportElement(e)),
         )
-        if missing:
-            return _unverified(
+        if self.judge is not None:
+            context = {
+                "kind": "conversation_coverage",
+                "transcript": [
+                    {"event_id": str(u.event_id), "text": u.text}
+                    for u in utterances
+                    if not matching.is_injection(u.text)
+                ],
+                "items": [
+                    {"item_id": i.item_id, "description": " / ".join(i.patterns)}
+                    for i in missing_items
+                ],
+            }
+            semantic = judge_criterion(
+                self.judge,
+                self.injector,
                 cid,
-                CriterionStatus.NOT_CHECKED,
-                "По правилам M1 не найдены элементы: "
-                + ", ".join(missing)
-                + ". Ожидает семантической проверки (M5) или эксперта.",
+                context,
+                attempt_id=self.attempt_id,
+                worker=self.worker,
             )
-        return _verified(
+            if semantic.status is CriterionStatus.PASSED:
+                return _verified(
+                    cid,
+                    CriterionStatus.PASSED,
+                    [_ev(u, u.text) for u in cited] + list(semantic.evidence),
+                    "Переданы суть, место, обстоятельства, решение ДДС и запрос (часть — "
+                    "семантическая проверка, перефразирование учтено, M5).",
+                )
+        return _unverified(
             cid,
-            CriterionStatus.PASSED,
-            [_ev(u, u.text) for u in cited],
-            "Переданы суть, место, обстоятельства, решение ДДС и запрос.",
+            CriterionStatus.NOT_CHECKED,
+            "Не найдены по ключевым словам M1 и не подтверждены семантически: "
+            + ", ".join(missing_labels)
+            + ". Ожидает эксперта.",
         )
 
     def _ack_received(self, cid: str) -> CriterionResult:

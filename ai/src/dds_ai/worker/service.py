@@ -8,15 +8,17 @@ from __future__ import annotations
 
 import json
 from collections.abc import Callable, Iterable
+from datetime import datetime
 from pathlib import Path
 from typing import Any, TypeVar
 from uuid import UUID
 
-from ..contracts.events import ComponentName
+from ..contracts.events import ComponentName, FailureKind
 from ..contracts.worker import (
     AdapterPolicy,
     ComponentHealth,
     ComponentStatus,
+    FailureRecord,
     Lane,
     PreflightReport,
 )
@@ -146,6 +148,22 @@ class InferenceWorker:
         return PreflightReport(
             profile=self.profile, components=tuple(components), voice_path_ok=voice_path_ok
         )
+
+    def preflight_failures(self, report: PreflightReport, *, at: datetime) -> list[FailureRecord]:
+        """Компоненты preflight не в состоянии `up` — сбой пишет воркер (решение D-3), а не
+        клиент: воркер отвечает за preflight (6.1), поэтому и за событие его провала."""
+        out = []
+        for c in report.components:
+            if c.health is ComponentHealth.UP:
+                continue
+            overloaded = c.health is ComponentHealth.OVERLOADED
+            kind = FailureKind.OVERFLOW if overloaded else FailureKind.ERROR
+            out.append(
+                FailureRecord(
+                    component=c.component, kind=kind, at=at, detail=f"preflight: {c.health.value}"
+                )
+            )
+        return out
 
     def shutdown(self) -> None:
         for ex in self._executors.values():

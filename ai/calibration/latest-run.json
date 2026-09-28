@@ -1,0 +1,329 @@
+{
+  "real_model": true,
+  "model_ref": {
+    "component": "semantic_judge",
+    "model_name": "qwen2.5-1.5b-instruct-q4_k_m",
+    "model_version": "size1117320736-sha256p-8dac351ea61b52e8",
+    "prompt_version": "judge-1"
+  },
+  "prompt_version": "judge-1",
+  "sample_size": 27,
+  "source_refs": [
+    "gas-smell-entrance",
+    "nine-floor-house",
+    "report-decision-respond",
+    "report-essence-fire",
+    "report-location-address",
+    "smoke-from-window"
+  ],
+  "thresholds_w03": {
+    "agreement": 0.85,
+    "false_penalty": 0.05,
+    "missed_error": 0.1,
+    "not_checked_share": 0.1
+  },
+  "metrics": {
+    "overall": {
+      "n": 27,
+      "agreement": 0.593,
+      "false_penalty_rate": 0.0,
+      "missed_error_rate": 0.333,
+      "not_checked_share": 0.185
+    },
+    "by_criterion": {
+      "card.circumstances": {
+        "n": 10,
+        "agreement": 0.7,
+        "false_penalty_rate": 0.0,
+        "missed_error_rate": 1.0,
+        "not_checked_share": 0.1
+      },
+      "manual.additions": {
+        "n": 5,
+        "agreement": 0.6,
+        "false_penalty_rate": 0.0,
+        "missed_error_rate": 0.0,
+        "not_checked_share": 0.2
+      },
+      "voice.facts_transferred": {
+        "n": 12,
+        "agreement": 0.5,
+        "false_penalty_rate": 0.0,
+        "missed_error_rate": 0.0,
+        "not_checked_share": 0.25
+      }
+    }
+  },
+  "rows": [
+    {
+      "case_id": "F-smoke-01",
+      "source_ref": "smoke-from-window",
+      "category": "correct",
+      "criterion_id": "card.circumstances",
+      "expected": "full",
+      "predicted": "full",
+      "latency_s": 5.69,
+      "error": null
+    },
+    {
+      "case_id": "F-smoke-02",
+      "source_ref": "smoke-from-window",
+      "category": "paraphrase",
+      "criterion_id": "card.circumstances",
+      "expected": "full",
+      "predicted": "full",
+      "latency_s": 4.35,
+      "error": null
+    },
+    {
+      "case_id": "F-smoke-03",
+      "source_ref": "smoke-from-window",
+      "category": "paraphrase",
+      "criterion_id": "card.circumstances",
+      "expected": "full",
+      "predicted": "full",
+      "latency_s": 5.39,
+      "error": null
+    },
+    {
+      "case_id": "F-smoke-04",
+      "source_ref": "smoke-from-window",
+      "category": "partial",
+      "criterion_id": "card.circumstances",
+      "expected": "partial",
+      "predicted": "partial",
+      "latency_s": 5.14,
+      "error": null
+    },
+    {
+      "case_id": "F-smoke-05",
+      "source_ref": "smoke-from-window",
+      "category": "wrong",
+      "criterion_id": "card.circumstances",
+      "expected": "none",
+      "predicted": "partial",
+      "latency_s": 5.1,
+      "error": null
+    },
+    {
+      "case_id": "F-smoke-06",
+      "source_ref": "smoke-from-window",
+      "category": "corrupted_stt",
+      "criterion_id": "card.circumstances",
+      "expected": "unclear",
+      "predicted": "partial",
+      "latency_s": 5.12,
+      "error": null
+    },
+    {
+      "case_id": "F-floors-01",
+      "source_ref": "nine-floor-house",
+      "category": "correct",
+      "criterion_id": "manual.additions",
+      "expected": "full",
+      "predicted": "full",
+      "latency_s": 3.9,
+      "error": null
+    },
+    {
+      "case_id": "F-floors-02",
+      "source_ref": "nine-floor-house",
+      "category": "paraphrase",
+      "criterion_id": "manual.additions",
+      "expected": "full",
+      "predicted": "full",
+      "latency_s": 3.85,
+      "error": null
+    },
+    {
+      "case_id": "F-floors-03",
+      "source_ref": "nine-floor-house",
+      "category": "partial",
+      "criterion_id": "manual.additions",
+      "expected": "partial",
+      "predicted": "partial",
+      "latency_s": 3.72,
+      "error": null
+    },
+    {
+      "case_id": "F-floors-04",
+      "source_ref": "nine-floor-house",
+      "category": "wrong",
+      "criterion_id": "manual.additions",
+      "expected": "none",
+      "predicted": "unclear",
+      "latency_s": 2.81,
+      "error": null
+    },
+    {
+      "case_id": "F-floors-05",
+      "source_ref": "nine-floor-house",
+      "category": "corrupted_stt",
+      "criterion_id": "manual.additions",
+      "expected": "unclear",
+      "predicted": "partial",
+      "latency_s": 3.4,
+      "error": null
+    },
+    {
+      "case_id": "F-gas-01",
+      "source_ref": "gas-smell-entrance",
+      "category": "correct",
+      "criterion_id": "card.circumstances",
+      "expected": "full",
+      "predicted": "full",
+      "latency_s": 4.86,
+      "error": null
+    },
+    {
+      "case_id": "F-gas-02",
+      "source_ref": "gas-smell-entrance",
+      "category": "paraphrase",
+      "criterion_id": "card.circumstances",
+      "expected": "full",
+      "predicted": "full",
+      "latency_s": 4.22,
+      "error": null
+    },
+    {
+      "case_id": "F-gas-03",
+      "source_ref": "gas-smell-entrance",
+      "category": "wrong",
+      "criterion_id": "card.circumstances",
+      "expected": "none",
+      "predicted": "partial",
+      "latency_s": 4.63,
+      "error": null
+    },
+    {
+      "case_id": "F-gas-04",
+      "source_ref": "gas-smell-entrance",
+      "category": "corrupted_stt",
+      "criterion_id": "card.circumstances",
+      "expected": "unclear",
+      "predicted": "unclear",
+      "latency_s": 2.7,
+      "error": null
+    },
+    {
+      "case_id": "C-essence-01",
+      "source_ref": "report-essence-fire",
+      "category": "correct",
+      "criterion_id": "voice.facts_transferred",
+      "expected": "full",
+      "predicted": "full",
+      "latency_s": 7.47,
+      "error": null
+    },
+    {
+      "case_id": "C-essence-02",
+      "source_ref": "report-essence-fire",
+      "category": "paraphrase",
+      "criterion_id": "voice.facts_transferred",
+      "expected": "full",
+      "predicted": "full",
+      "latency_s": 4.54,
+      "error": null
+    },
+    {
+      "case_id": "C-essence-03",
+      "source_ref": "report-essence-fire",
+      "category": "wrong",
+      "criterion_id": "voice.facts_transferred",
+      "expected": "none",
+      "predicted": "unclear",
+      "latency_s": 4.5,
+      "error": null
+    },
+    {
+      "case_id": "C-essence-04",
+      "source_ref": "report-essence-fire",
+      "category": "corrupted_stt",
+      "criterion_id": "voice.facts_transferred",
+      "expected": "unclear",
+      "predicted": "full",
+      "latency_s": 6.01,
+      "error": null
+    },
+    {
+      "case_id": "C-location-01",
+      "source_ref": "report-location-address",
+      "category": "correct",
+      "criterion_id": "voice.facts_transferred",
+      "expected": "full",
+      "predicted": "full",
+      "latency_s": 5.62,
+      "error": null
+    },
+    {
+      "case_id": "C-location-02",
+      "source_ref": "report-location-address",
+      "category": "paraphrase",
+      "criterion_id": "voice.facts_transferred",
+      "expected": "full",
+      "predicted": "full",
+      "latency_s": 6.59,
+      "error": null
+    },
+    {
+      "case_id": "C-location-03",
+      "source_ref": "report-location-address",
+      "category": "partial",
+      "criterion_id": "voice.facts_transferred",
+      "expected": "partial",
+      "predicted": "full",
+      "latency_s": 5.15,
+      "error": null
+    },
+    {
+      "case_id": "C-location-04",
+      "source_ref": "report-location-address",
+      "category": "wrong",
+      "criterion_id": "voice.facts_transferred",
+      "expected": "none",
+      "predicted": "unclear",
+      "latency_s": 5.6,
+      "error": null
+    },
+    {
+      "case_id": "C-location-05",
+      "source_ref": "report-location-address",
+      "category": "corrupted_stt",
+      "criterion_id": "voice.facts_transferred",
+      "expected": "unclear",
+      "predicted": "full",
+      "latency_s": 5.24,
+      "error": null
+    },
+    {
+      "case_id": "C-decision-01",
+      "source_ref": "report-decision-respond",
+      "category": "correct",
+      "criterion_id": "voice.facts_transferred",
+      "expected": "full",
+      "predicted": "full",
+      "latency_s": 6.2,
+      "error": null
+    },
+    {
+      "case_id": "C-decision-02",
+      "source_ref": "report-decision-respond",
+      "category": "paraphrase",
+      "criterion_id": "voice.facts_transferred",
+      "expected": "full",
+      "predicted": "full",
+      "latency_s": 6.07,
+      "error": null
+    },
+    {
+      "case_id": "C-decision-03",
+      "source_ref": "report-decision-respond",
+      "category": "wrong",
+      "criterion_id": "voice.facts_transferred",
+      "expected": "none",
+      "predicted": "unclear",
+      "latency_s": 4.04,
+      "error": null
+    }
+  ]
+}
