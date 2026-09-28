@@ -29,6 +29,7 @@ from ..contracts.events import (
     ComponentName,
     DispatcherDecision,
     EventSource,
+    FailureKind,
     ModelFailure,
     NotificationShown,
     ScenarioCallStateChanged,
@@ -294,20 +295,28 @@ class TrainingSession:
             )
         self.conversation, self.call_id = None, None
 
-    def _failure(self, f: FailureRecord) -> None:
+    def _failure(self, f: FailureRecord, *, recovered: bool = False) -> None:
         self.log.append(
             ModelFailure,
             source=EventSource.AI_WORKER,
             component=f.component,
             kind=f.kind,
             detail=f.detail,
+            recovered=recovered,
         )
 
     def _emit(self, turn: Turn) -> None:
-        for f in turn.failures:
-            self._failure(f)
         reply = turn.reply
         assert reply is not None
+        # Отклонённый выход LLM, исправленный повтором, — не сбой (решение D-1).
+        llm_ok = reply.mode is ReplyMode.LLM
+        for f in turn.failures:
+            self._failure(
+                f,
+                recovered=llm_ok
+                and f.component is ComponentName.LLM
+                and f.kind is FailureKind.INVALID_OUTPUT,
+            )
         utterance = self.log.append(
             Utterance,
             source=EventSource.AI_WORKER,

@@ -81,8 +81,11 @@ def had_conversation(events: Sequence[AttemptEvent]) -> bool:
 
 
 def technical_violation(events: Sequence[AttemptEvent]) -> bool:
-    """C-01: любой сбой после старта — флаг технического нарушения попытки."""
-    return any(isinstance(e, ModelFailure) for e in events)
+    """C-01: любой сбой после старта — флаг технического нарушения попытки.
+
+    Не сбой: отклонённый выход LLM, после которого повтор той же модели прошёл (`recovered`).
+    """
+    return any(isinstance(e, ModelFailure) and not e.recovered for e in events)
 
 
 def voice_path_failed(events: Sequence[AttemptEvent]) -> bool:

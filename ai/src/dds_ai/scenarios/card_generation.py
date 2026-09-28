@@ -25,7 +25,7 @@ from ..contracts.card import CardField, CardGeneration, FieldOrigin, FieldState,
 from ..contracts.common import VersionRef
 from ..contracts.events import ComponentName
 from ..contracts.scenario import Scenario, ScenarioFact
-from ..faults import ComponentFailure, FaultInjector
+from ..faults import ComponentFailure, FaultInjector, InvalidOutput
 from ..ports import LLMProvider
 
 CARD_SCHEMA = VersionRef(name="card_schema", version="draft-1")
@@ -102,10 +102,12 @@ def _validate_description(text: str, scenario: Scenario) -> str:
     """Отклонить переформулировку, вносящую числа вне опубликованных фактов (инвариант 5)."""
     text = text.strip()
     if not text:
-        raise ValueError("empty description")
+        raise InvalidOutput("empty description")
     invented = set(_NUMBER_RE.findall(text)) - _known_numbers(scenario)
     if invented:
-        raise ValueError(f"description invents numbers not in scenario facts: {sorted(invented)}")
+        raise InvalidOutput(
+            f"description invents numbers not in scenario facts: {sorted(invented)}"
+        )
     return text
 
 

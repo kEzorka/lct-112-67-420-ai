@@ -8,7 +8,7 @@ from uuid import UUID
 from .contracts.criteria import CriterionResult, CriterionStatus
 from .contracts.events import ComponentName
 from .contracts.worker import Lane
-from .faults import ComponentFailure, FaultInjector
+from .faults import ComponentFailure, FaultInjector, InvalidOutput
 from .ports import SemanticJudge
 
 if TYPE_CHECKING:
@@ -31,7 +31,7 @@ def judge_criterion(
         if not isinstance(result, CriterionResult):
             result = CriterionResult.model_validate(result)
         if result.criterion_id != criterion_id:
-            raise ValueError("judge answered for a different criterion")
+            raise InvalidOutput("judge answered for a different criterion")
         return result
 
     try:

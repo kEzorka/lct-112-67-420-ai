@@ -27,8 +27,8 @@ Opus 5.5 — A, D. Sonnet 5 — B, C, E, F, G, H.
 | A | `ai/m1-supervisor` | `session_01NTL4NzGczybo6tWdKZ8twR` | влит 28.09 (`76e61e5`) |
 | B | `ai/m2-voice` | `session_01G3mxbvAAGedRZaoYhVQk6C` | влит 28.09 (`76e61e5`) |
 | C | `ai/m4a-knowledge` | `session_017K7J9rjUwT6DCBeuXWFvjo` | влит 28.09 (`76e61e5`) |
-| D | `ai/m3-llm` | `session_01FgBY1dsMVHh4kEk2DYfvdE` | запущен 28.09 |
-| E | `ai/m4b-scenarios` | `session_01H2qy7VSMHpH3DBLGKFCqk9` | запущен 28.09 |
+| D | `ai/m3-llm` | `session_01FgBY1dsMVHh4kEk2DYfvdE` | влит 28.09 |
+| E | `ai/m4b-scenarios` | `session_01H2qy7VSMHpH3DBLGKFCqk9` | влит 28.09 |
 | F | `ai/m5-evaluation` | — | ждёт A, B, E |
 | G | `ai/m6-adaptation` | — | ждёт F |
 | H | `ai/m7-evidence` | — | ждёт всех |

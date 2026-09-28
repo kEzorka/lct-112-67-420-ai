@@ -32,7 +32,7 @@ from dds_ai.mocks.media import MockMediaTransport
 from dds_ai.supervisor import TurnKind
 from dds_ai.supervisor.prompting import PromptTemplate
 
-from .fakes import FakeLLM, FakeTTS, StubJudge, reply_json
+from .fakes import FakeLLM, FakeTTS, StubJudge, echo_draft, reply_json
 
 FIRE_REPORT = (
     "Пожар в жилом доме, ул. Тестовая, д. 12, кв. 5. Дым из окна квартиры. "
@@ -440,3 +440,21 @@ def test_switch_to_text_requires_a_voice_path_failure(fire):
         s.switch_to_text(llm_failure)
     with pytest.raises(RuntimeError):
         TrainingSession(fire).switch_to_text(stt_failure(s))
+
+
+def test_rejected_llm_output_recovered_by_retry_is_not_technical_violation(fire, rubric):
+    """Решение оркестратора D-1: отклонённый выход, после которого повтор прошёл, — не сбой."""
+    calls = {"n": 0}
+
+    def every_first_bad(prompt):
+        calls["n"] += 1
+        return "{не json" if calls["n"] % 2 else echo_draft(prompt)
+
+    s = TrainingSession(fire, llm=FakeLLM(every_first_bad), judge=StubJudge())
+    run_fire(s)
+    failures = [e for e in s.events if isinstance(e, ModelFailure)]
+    assert failures and all(f.recovered for f in failures)
+    replies = [e for e in s.events if isinstance(e, Utterance) and e.speaker == "supervisor"]
+    assert replies and not any(u.fallback for u in replies)
+    ev = s.evaluate(rubric)
+    assert ev.by_id("time.processing").status is not CriterionStatus.TECHNICAL_ERROR

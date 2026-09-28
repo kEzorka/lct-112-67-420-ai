@@ -188,6 +188,10 @@ class ModelFailure(_Event):
     component: ComponentName
     kind: FailureKind
     detail: str | None = None
+    recovered: bool = Field(
+        default=False,
+        description="Выход модели отклонён, но повтор прошёл: не техническое нарушение",
+    )
 
 
 AttemptEvent = Annotated[

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "dds-ai/corpus-version/0.2.0-draft",
+  "$id": "dds-ai/corpus-version/0.3.0-draft",
   "additionalProperties": false,
   "description": "Версия проиндексированного корпуса (входит в снимок версий сценария, D-003).",
   "properties": {

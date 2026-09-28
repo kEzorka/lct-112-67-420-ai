@@ -17,7 +17,7 @@ from .scenario_lifecycle import ScenarioDraftRecord
 from .scoring import AttemptVersionSnapshot, ScoreSummary, ScoreVersion
 from .worker import AdapterPolicy, FailureRecord, PreflightReport
 
-CONTRACTS_VERSION = "0.2.0-draft"
+CONTRACTS_VERSION = "0.3.0-draft"
 
 # Имя файла JSON Schema в /contracts → модель.
 SCHEMA_MODELS: dict[str, type[BaseModel] | TypeAdapter] = {

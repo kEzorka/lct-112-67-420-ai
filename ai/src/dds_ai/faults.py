@@ -20,6 +20,11 @@ from .contracts.worker import FailureRecord
 T = TypeVar("T")
 
 
+class InvalidOutput(ValueError):
+    """Выход модели не прошёл проверку. Только он (и ValidationError) даёт `invalid_output`;
+    прочий ValueError — ошибка runtime (`error`)."""
+
+
 class ComponentFailure(Exception):
     def __init__(self, component: ComponentName, kind: FailureKind, detail: str | None = None):
         super().__init__(f"{component}: {kind}" + (f" ({detail})" if detail else ""))
@@ -91,7 +96,7 @@ class FaultInjector:
             failure = ComponentFailure(component, FailureKind.TIMEOUT, str(exc) or None)
             self._record(failure, attempt_id, affected_evidence)
             raise failure from exc
-        except (ValidationError, ValueError) as exc:
+        except (ValidationError, InvalidOutput) as exc:
             failure = ComponentFailure(component, FailureKind.INVALID_OUTPUT, type(exc).__name__)
             self._record(failure, attempt_id, affected_evidence)
             raise failure from exc

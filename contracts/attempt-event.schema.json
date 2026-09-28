@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "dds-ai/attempt-event/0.2.0-draft",
+  "$id": "dds-ai/attempt-event/0.3.0-draft",
   "$defs": {
     "AckDeliveryUnconfirmed": {
       "additionalProperties": false,
@@ -756,6 +756,12 @@
           ],
           "default": null,
           "title": "Detail"
+        },
+        "recovered": {
+          "default": false,
+          "description": "Выход модели отклонён, но повтор прошёл: не техническое нарушение",
+          "title": "Recovered",
+          "type": "boolean"
         }
       },
       "required": [

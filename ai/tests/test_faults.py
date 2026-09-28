@@ -8,7 +8,7 @@ from dds_ai.contracts.common import ModelRef
 from dds_ai.contracts.criteria import CriterionResult, CriterionStatus
 from dds_ai.contracts.events import ComponentName, FailureKind
 from dds_ai.evaluation import judge_criterion
-from dds_ai.faults import DEGRADATION, ComponentFailure, Degradation, FaultInjector
+from dds_ai.faults import DEGRADATION, ComponentFailure, Degradation, FaultInjector, InvalidOutput
 
 from .conftest import RULE, T0, ev
 
@@ -106,3 +106,18 @@ def test_judge_answering_other_criterion_is_invalid():
     r = judge_criterion(FakeJudge(answer=other), inj, "c")
     assert r.status is CriterionStatus.NOT_CHECKED
     assert inj.log[-1].kind is FailureKind.INVALID_OUTPUT
+
+
+def test_plain_value_error_is_runtime_error_not_invalid_output():
+    inj = FaultInjector()
+
+    def boom():
+        raise ValueError("prompt longer than context")
+
+    def bad_output():
+        raise InvalidOutput("schema")
+
+    for fn, kind in ((boom, FailureKind.ERROR), (bad_output, FailureKind.INVALID_OUTPUT)):
+        with pytest.raises(ComponentFailure) as info:
+            inj.call(ComponentName.LLM, fn)
+        assert info.value.kind is kind
