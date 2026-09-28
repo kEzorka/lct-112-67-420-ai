@@ -1,0 +1,171 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dds-ai/recommendation/0.1.0-draft",
+  "$defs": {
+    "ModelRef": {
+      "additionalProperties": false,
+      "description": "Версия модели и промпта, на которой принято решение (инвариант 6).",
+      "properties": {
+        "component": {
+          "minLength": 1,
+          "title": "Component",
+          "type": "string"
+        },
+        "model_name": {
+          "minLength": 1,
+          "title": "Model Name",
+          "type": "string"
+        },
+        "model_version": {
+          "minLength": 1,
+          "title": "Model Version",
+          "type": "string"
+        },
+        "prompt_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Prompt Version"
+        }
+      },
+      "required": [
+        "component",
+        "model_name",
+        "model_version"
+      ],
+      "title": "ModelRef",
+      "type": "object"
+    },
+    "RecommendationStatus": {
+      "enum": [
+        "available",
+        "unavailable"
+      ],
+      "title": "RecommendationStatus",
+      "type": "string"
+    },
+    "VersionRef": {
+      "additionalProperties": false,
+      "description": "Ссылка на версионируемый артефакт: сценарий, правила, рубрику, политику времени.",
+      "properties": {
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "version": {
+          "minLength": 1,
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version"
+      ],
+      "title": "VersionRef",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "recommendation_id": {
+      "format": "uuid",
+      "title": "Recommendation Id",
+      "type": "string"
+    },
+    "trainee_id": {
+      "format": "uuid",
+      "title": "Trainee Id",
+      "type": "string"
+    },
+    "profile_version_id": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Profile Version Id"
+    },
+    "pool_snapshot_id": {
+      "format": "uuid",
+      "title": "Pool Snapshot Id",
+      "type": "string"
+    },
+    "pool_task_ids": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Pool Task Ids",
+      "type": "array"
+    },
+    "status": {
+      "$ref": "#/$defs/RecommendationStatus"
+    },
+    "task_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Task Id"
+    },
+    "reason": {
+      "minLength": 1,
+      "title": "Reason",
+      "type": "string"
+    },
+    "model_ref": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ModelRef"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "selection_rules": {
+      "$ref": "#/$defs/VersionRef"
+    },
+    "auto_applied": {
+      "default": false,
+      "title": "Auto Applied",
+      "type": "boolean"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "recommendation_id",
+    "trainee_id",
+    "profile_version_id",
+    "pool_snapshot_id",
+    "pool_task_ids",
+    "status",
+    "reason",
+    "selection_rules",
+    "created_at"
+  ],
+  "title": "Recommendation",
+  "type": "object"
+}

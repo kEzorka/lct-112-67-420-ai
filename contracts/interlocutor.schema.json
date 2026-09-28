@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dds-ai/interlocutor/0.1.0-draft",
+  "$defs": {
+    "SupervisorAction": {
+      "enum": [
+        "listen",
+        "clarify",
+        "read_back",
+        "confirm_receipt"
+      ],
+      "title": "SupervisorAction",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Контракт собеседника: позже подключается канал оператора 112 (D-030).",
+  "properties": {
+    "role_id": {
+      "minLength": 1,
+      "title": "Role Id",
+      "type": "string"
+    },
+    "published_fact_ids": {
+      "default": [],
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Published Fact Ids",
+      "type": "array"
+    },
+    "allowed_actions": {
+      "items": {
+        "$ref": "#/$defs/SupervisorAction"
+      },
+      "minItems": 1,
+      "title": "Allowed Actions",
+      "type": "array"
+    }
+  },
+  "required": [
+    "role_id",
+    "allowed_actions"
+  ],
+  "title": "Interlocutor",
+  "type": "object"
+}

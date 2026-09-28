@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dds-ai/card-revision/0.1.0-draft",
+  "$defs": {
+    "CardField": {
+      "additionalProperties": false,
+      "properties": {
+        "state": {
+          "$ref": "#/$defs/FieldState"
+        },
+        "raw": {
+          "default": null,
+          "title": "Raw"
+        },
+        "normalized": {
+          "default": null,
+          "title": "Normalized"
+        },
+        "origin": {
+          "$ref": "#/$defs/FieldOrigin"
+        },
+        "visible_to_trainee": {
+          "default": true,
+          "title": "Visible To Trainee",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "state",
+        "origin"
+      ],
+      "title": "CardField",
+      "type": "object"
+    },
+    "FieldOrigin": {
+      "enum": [
+        "operator_112",
+        "dispatcher"
+      ],
+      "title": "FieldOrigin",
+      "type": "string"
+    },
+    "FieldState": {
+      "description": "«Неизвестно», «нет» и «не применимо» не сводятся к пустой строке или нулю.",
+      "enum": [
+        "known",
+        "unknown",
+        "none",
+        "not_applicable"
+      ],
+      "title": "FieldState",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "card_id": {
+      "format": "uuid",
+      "title": "Card Id",
+      "type": "string"
+    },
+    "revision": {
+      "minimum": 1,
+      "title": "Revision",
+      "type": "integer"
+    },
+    "author_id": {
+      "format": "uuid",
+      "title": "Author Id",
+      "type": "string"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "changes": {
+      "additionalProperties": {
+        "$ref": "#/$defs/CardField"
+      },
+      "minProperties": 1,
+      "propertyNames": {
+        "minLength": 1
+      },
+      "title": "Changes",
+      "type": "object"
+    }
+  },
+  "required": [
+    "card_id",
+    "revision",
+    "author_id",
+    "created_at",
+    "changes"
+  ],
+  "title": "CardRevisionRecord",
+  "type": "object"
+}

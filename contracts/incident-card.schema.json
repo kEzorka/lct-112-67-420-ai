@@ -1,0 +1,153 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dds-ai/incident-card/0.1.0-draft",
+  "$defs": {
+    "CardField": {
+      "additionalProperties": false,
+      "properties": {
+        "state": {
+          "$ref": "#/$defs/FieldState"
+        },
+        "raw": {
+          "default": null,
+          "title": "Raw"
+        },
+        "normalized": {
+          "default": null,
+          "title": "Normalized"
+        },
+        "origin": {
+          "$ref": "#/$defs/FieldOrigin"
+        },
+        "visible_to_trainee": {
+          "default": true,
+          "title": "Visible To Trainee",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "state",
+        "origin"
+      ],
+      "title": "CardField",
+      "type": "object"
+    },
+    "CardGeneration": {
+      "additionalProperties": false,
+      "description": "Всё, что нужно для воспроизведения исходной карточки (D-003).",
+      "properties": {
+        "scenario": {
+          "$ref": "#/$defs/VersionRef"
+        },
+        "variation_params": {
+          "additionalProperties": true,
+          "title": "Variation Params",
+          "type": "object"
+        },
+        "seed": {
+          "title": "Seed",
+          "type": "integer"
+        },
+        "model_ref_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Ссылка на ModelRef в снимке версий",
+          "title": "Model Ref Id"
+        }
+      },
+      "required": [
+        "scenario",
+        "seed"
+      ],
+      "title": "CardGeneration",
+      "type": "object"
+    },
+    "FieldOrigin": {
+      "enum": [
+        "operator_112",
+        "dispatcher"
+      ],
+      "title": "FieldOrigin",
+      "type": "string"
+    },
+    "FieldState": {
+      "description": "«Неизвестно», «нет» и «не применимо» не сводятся к пустой строке или нулю.",
+      "enum": [
+        "known",
+        "unknown",
+        "none",
+        "not_applicable"
+      ],
+      "title": "FieldState",
+      "type": "string"
+    },
+    "VersionRef": {
+      "additionalProperties": false,
+      "description": "Ссылка на версионируемый артефакт: сценарий, правила, рубрику, политику времени.",
+      "properties": {
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "version": {
+          "minLength": 1,
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version"
+      ],
+      "title": "VersionRef",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Исходная карточка от ИИ-оператора 112. Неизменна; правки диспетчера — ревизии.",
+  "properties": {
+    "card_id": {
+      "format": "uuid",
+      "title": "Card Id",
+      "type": "string"
+    },
+    "card_schema": {
+      "$ref": "#/$defs/VersionRef"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "fields": {
+      "additionalProperties": {
+        "$ref": "#/$defs/CardField"
+      },
+      "propertyNames": {
+        "minLength": 1
+      },
+      "title": "Fields",
+      "type": "object"
+    },
+    "generation": {
+      "$ref": "#/$defs/CardGeneration"
+    }
+  },
+  "required": [
+    "card_id",
+    "card_schema",
+    "created_at",
+    "fields",
+    "generation"
+  ],
+  "title": "IncidentCard",
+  "type": "object"
+}

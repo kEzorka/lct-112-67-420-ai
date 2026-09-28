@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dds-ai/supervisor-reply/0.1.0-draft",
+  "$defs": {
+    "ModelRef": {
+      "additionalProperties": false,
+      "description": "Версия модели и промпта, на которой принято решение (инвариант 6).",
+      "properties": {
+        "component": {
+          "minLength": 1,
+          "title": "Component",
+          "type": "string"
+        },
+        "model_name": {
+          "minLength": 1,
+          "title": "Model Name",
+          "type": "string"
+        },
+        "model_version": {
+          "minLength": 1,
+          "title": "Model Version",
+          "type": "string"
+        },
+        "prompt_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Prompt Version"
+        }
+      },
+      "required": [
+        "component",
+        "model_name",
+        "model_version"
+      ],
+      "title": "ModelRef",
+      "type": "object"
+    },
+    "ReplyMode": {
+      "enum": [
+        "llm",
+        "fallback"
+      ],
+      "title": "ReplyMode",
+      "type": "string"
+    },
+    "SupervisorAction": {
+      "enum": [
+        "listen",
+        "clarify",
+        "read_back",
+        "confirm_receipt"
+      ],
+      "title": "SupervisorAction",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "action": {
+      "$ref": "#/$defs/SupervisorAction"
+    },
+    "text": {
+      "minLength": 1,
+      "title": "Text",
+      "type": "string"
+    },
+    "used_fact_ids": {
+      "default": [],
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Used Fact Ids",
+      "type": "array"
+    },
+    "mode": {
+      "$ref": "#/$defs/ReplyMode"
+    },
+    "model_ref": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ModelRef"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "required": [
+    "action",
+    "text",
+    "mode"
+  ],
+  "title": "SupervisorReply",
+  "type": "object"
+}

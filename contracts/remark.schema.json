@@ -1,0 +1,224 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dds-ai/remark/0.1.0-draft",
+  "$defs": {
+    "Evidence": {
+      "additionalProperties": false,
+      "description": "Проверяемое основание решения (D-031).",
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/EvidenceKind"
+        },
+        "ref": {
+          "description": "Идентификатор события, поля, реплики или правила",
+          "minLength": 1,
+          "title": "Ref",
+          "type": "string"
+        },
+        "excerpt": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Цитата из ответа ученика",
+          "title": "Excerpt"
+        },
+        "start_ms": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start Ms"
+        },
+        "end_ms": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "End Ms"
+        }
+      },
+      "required": [
+        "kind",
+        "ref"
+      ],
+      "title": "Evidence",
+      "type": "object"
+    },
+    "EvidenceKind": {
+      "enum": [
+        "event",
+        "transcript_span",
+        "card_field",
+        "rule"
+      ],
+      "title": "EvidenceKind",
+      "type": "string"
+    },
+    "ModelRef": {
+      "additionalProperties": false,
+      "description": "Версия модели и промпта, на которой принято решение (инвариант 6).",
+      "properties": {
+        "component": {
+          "minLength": 1,
+          "title": "Component",
+          "type": "string"
+        },
+        "model_name": {
+          "minLength": 1,
+          "title": "Model Name",
+          "type": "string"
+        },
+        "model_version": {
+          "minLength": 1,
+          "title": "Model Version",
+          "type": "string"
+        },
+        "prompt_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Prompt Version"
+        }
+      },
+      "required": [
+        "component",
+        "model_name",
+        "model_version"
+      ],
+      "title": "ModelRef",
+      "type": "object"
+    },
+    "RemarkType": {
+      "enum": [
+        "time",
+        "fact_field",
+        "action_route",
+        "communication",
+        "sequence",
+        "grammar",
+        "source_uncertainty",
+        "technical_fault"
+      ],
+      "title": "RemarkType",
+      "type": "string"
+    },
+    "Severity": {
+      "enum": [
+        "info",
+        "error",
+        "major_error"
+      ],
+      "title": "Severity",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "remark_id": {
+      "minLength": 1,
+      "title": "Remark Id",
+      "type": "string"
+    },
+    "attempt_id": {
+      "minLength": 1,
+      "title": "Attempt Id",
+      "type": "string"
+    },
+    "type": {
+      "$ref": "#/$defs/RemarkType"
+    },
+    "severity": {
+      "$ref": "#/$defs/Severity"
+    },
+    "criterion_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Criterion Id"
+    },
+    "text": {
+      "minLength": 1,
+      "title": "Text",
+      "type": "string"
+    },
+    "suggestion": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Для грамматики: исправление, не применяется",
+      "title": "Suggestion"
+    },
+    "evidence": {
+      "items": {
+        "$ref": "#/$defs/Evidence"
+      },
+      "minItems": 1,
+      "title": "Evidence",
+      "type": "array"
+    },
+    "owner": {
+      "description": "Кто проверяет: rule / model / expert",
+      "minLength": 1,
+      "title": "Owner",
+      "type": "string"
+    },
+    "model_ref": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ModelRef"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "required": [
+    "remark_id",
+    "attempt_id",
+    "type",
+    "severity",
+    "text",
+    "evidence",
+    "owner"
+  ],
+  "title": "Remark",
+  "type": "object"
+}

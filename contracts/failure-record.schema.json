@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dds-ai/failure-record/0.1.0-draft",
+  "$defs": {
+    "ComponentName": {
+      "enum": [
+        "stt",
+        "tts",
+        "llm",
+        "semantic_judge",
+        "recommender",
+        "embedder"
+      ],
+      "title": "ComponentName",
+      "type": "string"
+    },
+    "FailureKind": {
+      "enum": [
+        "error",
+        "timeout",
+        "overflow",
+        "invalid_output"
+      ],
+      "title": "FailureKind",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "component": {
+      "$ref": "#/$defs/ComponentName"
+    },
+    "kind": {
+      "$ref": "#/$defs/FailureKind"
+    },
+    "at": {
+      "format": "date-time",
+      "title": "At",
+      "type": "string"
+    },
+    "attempt_id": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Attempt Id"
+    },
+    "affected_evidence": {
+      "default": [],
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Affected Evidence",
+      "type": "array"
+    },
+    "detail": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Detail"
+    }
+  },
+  "required": [
+    "component",
+    "kind",
+    "at"
+  ],
+  "title": "FailureRecord",
+  "type": "object"
+}

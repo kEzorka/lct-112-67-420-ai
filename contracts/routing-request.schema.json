@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dds-ai/routing-request/0.1.0-draft",
+  "additionalProperties": false,
+  "properties": {
+    "incident_type": {
+      "minLength": 1,
+      "title": "Incident Type",
+      "type": "string"
+    },
+    "features": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Features",
+      "type": "object"
+    },
+    "address_known": {
+      "default": true,
+      "title": "Address Known",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "incident_type"
+  ],
+  "title": "RoutingRequest",
+  "type": "object"
+}

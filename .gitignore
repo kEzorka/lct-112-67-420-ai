@@ -11,3 +11,6 @@ models/
 *.bin
 *.wav
 !.env.example
+*.egg-info/
+.pytest_cache/
+.ruff_cache/

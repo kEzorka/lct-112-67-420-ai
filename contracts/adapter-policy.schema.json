@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dds-ai/adapter-policy/0.1.0-draft",
+  "$defs": {
+    "ComponentName": {
+      "enum": [
+        "stt",
+        "tts",
+        "llm",
+        "semantic_judge",
+        "recommender",
+        "embedder"
+      ],
+      "title": "ComponentName",
+      "type": "string"
+    },
+    "Lane": {
+      "description": "Синхронная нагрузка живого звонка отделена от фоновой.",
+      "enum": [
+        "interactive",
+        "background"
+      ],
+      "title": "Lane",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "component": {
+      "$ref": "#/$defs/ComponentName"
+    },
+    "lane": {
+      "$ref": "#/$defs/Lane"
+    },
+    "timeout_s": {
+      "exclusiveMinimum": 0,
+      "title": "Timeout S",
+      "type": "number"
+    },
+    "max_queue": {
+      "minimum": 1,
+      "title": "Max Queue",
+      "type": "integer"
+    },
+    "max_concurrency": {
+      "minimum": 1,
+      "title": "Max Concurrency",
+      "type": "integer"
+    },
+    "failure_policy_version": {
+      "minLength": 1,
+      "title": "Failure Policy Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "component",
+    "lane",
+    "timeout_s",
+    "max_queue",
+    "max_concurrency",
+    "failure_policy_version"
+  ],
+  "title": "AdapterPolicy",
+  "type": "object"
+}

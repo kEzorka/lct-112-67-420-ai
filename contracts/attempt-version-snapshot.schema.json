@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dds-ai/attempt-version-snapshot/0.1.0-draft",
+  "$defs": {
+    "ModelRef": {
+      "additionalProperties": false,
+      "description": "Версия модели и промпта, на которой принято решение (инвариант 6).",
+      "properties": {
+        "component": {
+          "minLength": 1,
+          "title": "Component",
+          "type": "string"
+        },
+        "model_name": {
+          "minLength": 1,
+          "title": "Model Name",
+          "type": "string"
+        },
+        "model_version": {
+          "minLength": 1,
+          "title": "Model Version",
+          "type": "string"
+        },
+        "prompt_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Prompt Version"
+        }
+      },
+      "required": [
+        "component",
+        "model_name",
+        "model_version"
+      ],
+      "title": "ModelRef",
+      "type": "object"
+    },
+    "VersionRef": {
+      "additionalProperties": false,
+      "description": "Ссылка на версионируемый артефакт: сценарий, правила, рубрику, политику времени.",
+      "properties": {
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "version": {
+          "minLength": 1,
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version"
+      ],
+      "title": "VersionRef",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Фиксируется 1:1 при старте попытки.",
+  "properties": {
+    "attempt_id": {
+      "format": "uuid",
+      "title": "Attempt Id",
+      "type": "string"
+    },
+    "scenario": {
+      "$ref": "#/$defs/VersionRef"
+    },
+    "reference": {
+      "$ref": "#/$defs/VersionRef"
+    },
+    "card_schema": {
+      "$ref": "#/$defs/VersionRef"
+    },
+    "classifier": {
+      "$ref": "#/$defs/VersionRef"
+    },
+    "routing_rules": {
+      "$ref": "#/$defs/VersionRef"
+    },
+    "rubric": {
+      "$ref": "#/$defs/VersionRef"
+    },
+    "time_policy": {
+      "$ref": "#/$defs/VersionRef"
+    },
+    "difficulty_config": {
+      "$ref": "#/$defs/VersionRef"
+    },
+    "models": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/ModelRef"
+      },
+      "title": "Models",
+      "type": "array"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "attempt_id",
+    "scenario",
+    "reference",
+    "card_schema",
+    "classifier",
+    "routing_rules",
+    "rubric",
+    "time_policy",
+    "difficulty_config",
+    "created_at"
+  ],
+  "title": "AttemptVersionSnapshot",
+  "type": "object"
+}

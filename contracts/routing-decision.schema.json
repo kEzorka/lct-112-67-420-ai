@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dds-ai/routing-decision/0.1.0-draft",
+  "$defs": {
+    "RuleStatus": {
+      "enum": [
+        "active",
+        "ambiguous",
+        "quarantined"
+      ],
+      "title": "RuleStatus",
+      "type": "string"
+    },
+    "VersionRef": {
+      "additionalProperties": false,
+      "description": "Ссылка на версионируемый артефакт: сценарий, правила, рубрику, политику времени.",
+      "properties": {
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "version": {
+          "minLength": 1,
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version"
+      ],
+      "title": "VersionRef",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "routing_rules": {
+      "$ref": "#/$defs/VersionRef"
+    },
+    "rule_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Rule Id"
+    },
+    "rule_status": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/RuleStatus"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "None — правило не найдено"
+    },
+    "ekp_code": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Ekp Code"
+    },
+    "main_service": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Main Service"
+    },
+    "services": {
+      "default": [],
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Services",
+      "type": "array"
+    }
+  },
+  "required": [
+    "routing_rules",
+    "rule_id",
+    "rule_status"
+  ],
+  "title": "RoutingDecision",
+  "type": "object"
+}

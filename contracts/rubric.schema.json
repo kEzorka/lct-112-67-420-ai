@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dds-ai/rubric/0.1.0-draft",
+  "$defs": {
+    "RubricCriterion": {
+      "additionalProperties": false,
+      "properties": {
+        "criterion_id": {
+          "minLength": 1,
+          "title": "Criterion Id",
+          "type": "string"
+        },
+        "title": {
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "weight": {
+          "description": "Внутригрупповой вес, нормируется (C-06)",
+          "exclusiveMinimum": 0,
+          "title": "Weight",
+          "type": "number"
+        },
+        "critical": {
+          "default": false,
+          "description": "Проверенный провал = «не сдано» (W-01)",
+          "title": "Critical",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "criterion_id",
+        "title",
+        "weight"
+      ],
+      "title": "RubricCriterion",
+      "type": "object"
+    },
+    "RubricGroup": {
+      "additionalProperties": false,
+      "properties": {
+        "group_id": {
+          "minLength": 1,
+          "title": "Group Id",
+          "type": "string"
+        },
+        "title": {
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "weight": {
+          "exclusiveMinimum": 0,
+          "title": "Weight",
+          "type": "number"
+        },
+        "criteria": {
+          "items": {
+            "$ref": "#/$defs/RubricCriterion"
+          },
+          "minItems": 1,
+          "title": "Criteria",
+          "type": "array"
+        }
+      },
+      "required": [
+        "group_id",
+        "title",
+        "weight",
+        "criteria"
+      ],
+      "title": "RubricGroup",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "rubric_version": {
+      "minLength": 1,
+      "title": "Rubric Version",
+      "type": "string"
+    },
+    "pass_threshold": {
+      "maximum": 100,
+      "minimum": 0,
+      "title": "Pass Threshold",
+      "type": "number"
+    },
+    "groups": {
+      "items": {
+        "$ref": "#/$defs/RubricGroup"
+      },
+      "minItems": 1,
+      "title": "Groups",
+      "type": "array"
+    }
+  },
+  "required": [
+    "rubric_version",
+    "pass_threshold",
+    "groups"
+  ],
+  "title": "Rubric",
+  "type": "object"
+}

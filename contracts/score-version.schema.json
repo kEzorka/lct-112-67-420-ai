@@ -1,0 +1,448 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dds-ai/score-version/0.1.0-draft",
+  "$defs": {
+    "CriterionResult": {
+      "additionalProperties": false,
+      "description": "Результат одного критерия.\n\n- Значение есть только у проверенных статусов: passed → 1 или 0,5; failed и not_done → 0.\n- 0,5 требует основания partial_reason (W-01).\n- Проверенный результат требует доказательства и ссылки на правило или модель (D-031).\n- По правилу со статусом ambiguous/quarantined авто-вердикт запрещён: только эксперт.",
+      "properties": {
+        "criterion_id": {
+          "minLength": 1,
+          "title": "Criterion Id",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/CriterionStatus"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "enum": [
+                0,
+                0.5,
+                1
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Value"
+        },
+        "partial_reason": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PartialReason"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "evidence": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Evidence"
+          },
+          "title": "Evidence",
+          "type": "array"
+        },
+        "rule_ref": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/VersionRef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "rule_status": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RuleStatus"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "model_ref": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ModelRef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "decided_by": {
+          "default": "rule",
+          "enum": [
+            "rule",
+            "model",
+            "expert"
+          ],
+          "title": "Decided By",
+          "type": "string"
+        },
+        "explanation": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Понятное обоснование для ученика",
+          "title": "Explanation"
+        }
+      },
+      "required": [
+        "criterion_id",
+        "status"
+      ],
+      "title": "CriterionResult",
+      "type": "object"
+    },
+    "CriterionStatus": {
+      "enum": [
+        "passed",
+        "failed",
+        "not_done",
+        "no_evidence",
+        "technical_error",
+        "not_applicable",
+        "not_checked"
+      ],
+      "title": "CriterionStatus",
+      "type": "string"
+    },
+    "Evidence": {
+      "additionalProperties": false,
+      "description": "Проверяемое основание решения (D-031).",
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/EvidenceKind"
+        },
+        "ref": {
+          "description": "Идентификатор события, поля, реплики или правила",
+          "minLength": 1,
+          "title": "Ref",
+          "type": "string"
+        },
+        "excerpt": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Цитата из ответа ученика",
+          "title": "Excerpt"
+        },
+        "start_ms": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start Ms"
+        },
+        "end_ms": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "End Ms"
+        }
+      },
+      "required": [
+        "kind",
+        "ref"
+      ],
+      "title": "Evidence",
+      "type": "object"
+    },
+    "EvidenceKind": {
+      "enum": [
+        "event",
+        "transcript_span",
+        "card_field",
+        "rule"
+      ],
+      "title": "EvidenceKind",
+      "type": "string"
+    },
+    "ModelRef": {
+      "additionalProperties": false,
+      "description": "Версия модели и промпта, на которой принято решение (инвариант 6).",
+      "properties": {
+        "component": {
+          "minLength": 1,
+          "title": "Component",
+          "type": "string"
+        },
+        "model_name": {
+          "minLength": 1,
+          "title": "Model Name",
+          "type": "string"
+        },
+        "model_version": {
+          "minLength": 1,
+          "title": "Model Version",
+          "type": "string"
+        },
+        "prompt_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Prompt Version"
+        }
+      },
+      "required": [
+        "component",
+        "model_name",
+        "model_version"
+      ],
+      "title": "ModelRef",
+      "type": "object"
+    },
+    "PartialReason": {
+      "description": "Единственные два основания для 0,5 по W-01.",
+      "enum": [
+        "inaccurate_field",
+        "late"
+      ],
+      "title": "PartialReason",
+      "type": "string"
+    },
+    "RuleStatus": {
+      "enum": [
+        "active",
+        "ambiguous",
+        "quarantined"
+      ],
+      "title": "RuleStatus",
+      "type": "string"
+    },
+    "ScoreSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "rubric_version": {
+          "minLength": 1,
+          "title": "Rubric Version",
+          "type": "string"
+        },
+        "verdict": {
+          "$ref": "#/$defs/Verdict"
+        },
+        "total": {
+          "anyOf": [
+            {
+              "maximum": 100,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Total"
+        },
+        "lower": {
+          "anyOf": [
+            {
+              "maximum": 100,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Lower"
+        },
+        "upper": {
+          "anyOf": [
+            {
+              "maximum": 100,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Upper"
+        },
+        "effective_weights": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "propertyNames": {
+            "minLength": 1
+          },
+          "title": "Effective Weights",
+          "type": "object"
+        },
+        "excluded_groups": {
+          "default": [],
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Excluded Groups",
+          "type": "array"
+        },
+        "critical_failures": {
+          "default": [],
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Critical Failures",
+          "type": "array"
+        }
+      },
+      "required": [
+        "rubric_version",
+        "verdict"
+      ],
+      "title": "ScoreSummary",
+      "type": "object"
+    },
+    "Verdict": {
+      "enum": [
+        "passed",
+        "not_passed",
+        "provisional",
+        "not_scored"
+      ],
+      "title": "Verdict",
+      "type": "string"
+    },
+    "VersionRef": {
+      "additionalProperties": false,
+      "description": "Ссылка на версионируемый артефакт: сценарий, правила, рубрику, политику времени.",
+      "properties": {
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "version": {
+          "minLength": 1,
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version"
+      ],
+      "title": "VersionRef",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Append-only: экспертная поправка создаёт версию N+1.",
+  "properties": {
+    "score_version_id": {
+      "format": "uuid",
+      "title": "Score Version Id",
+      "type": "string"
+    },
+    "attempt_id": {
+      "format": "uuid",
+      "title": "Attempt Id",
+      "type": "string"
+    },
+    "parent_score_version_id": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Parent Score Version Id"
+    },
+    "author": {
+      "minLength": 1,
+      "title": "Author",
+      "type": "string"
+    },
+    "reason": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Reason"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "criterion_results": {
+      "items": {
+        "$ref": "#/$defs/CriterionResult"
+      },
+      "title": "Criterion Results",
+      "type": "array"
+    },
+    "summary": {
+      "$ref": "#/$defs/ScoreSummary"
+    }
+  },
+  "required": [
+    "score_version_id",
+    "attempt_id",
+    "author",
+    "created_at",
+    "criterion_results",
+    "summary"
+  ],
+  "title": "ScoreVersion",
+  "type": "object"
+}

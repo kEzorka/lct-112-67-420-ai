@@ -1,0 +1,54 @@
+{
+  "rubric_version": "w01-draft-1",
+  "pass_threshold": 75,
+  "groups": [
+    {
+      "group_id": "card",
+      "title": "Карточка",
+      "weight": 20,
+      "criteria": [
+        {"criterion_id": "card.address", "title": "Адрес указан верно", "weight": 2, "critical": true},
+        {"criterion_id": "card.incident_type", "title": "Тип происшествия", "weight": 1},
+        {"criterion_id": "card.circumstances", "title": "Существенные обстоятельства", "weight": 1}
+      ]
+    },
+    {
+      "group_id": "routing",
+      "title": "Решение и маршрутизация",
+      "weight": 25,
+      "criteria": [
+        {"criterion_id": "routing.decision", "title": "Решение: ответить / отказаться / перенаправить", "weight": 1},
+        {"criterion_id": "routing.services", "title": "Вызваны нужные службы", "weight": 2, "critical": true}
+      ]
+    },
+    {
+      "group_id": "voice",
+      "title": "Голос",
+      "weight": 25,
+      "criteria": [
+        {"criterion_id": "voice.call_made", "title": "Звонок руководителю выполнен", "weight": 1},
+        {"criterion_id": "voice.facts_transferred", "title": "Переданы существенные сведения", "weight": 2},
+        {"criterion_id": "voice.ack_received", "title": "Получено подтверждение", "weight": 1}
+      ]
+    },
+    {
+      "group_id": "process_time",
+      "title": "Процесс и время",
+      "weight": 20,
+      "criteria": [
+        {"criterion_id": "time.open", "title": "Карточка открыта за 30 с", "weight": 1},
+        {"criterion_id": "time.processing", "title": "Обработка за 180 с", "weight": 1, "critical": true},
+        {"criterion_id": "process.sequence", "title": "Последовательность действий", "weight": 1}
+      ]
+    },
+    {
+      "group_id": "manual_input",
+      "title": "Ручной ввод",
+      "weight": 10,
+      "criteria": [
+        {"criterion_id": "manual.additions", "title": "Ручные дополнения карточки", "weight": 2},
+        {"criterion_id": "manual.grammar", "title": "Грамотность ручного ввода", "weight": 1}
+      ]
+    }
+  ]
+}

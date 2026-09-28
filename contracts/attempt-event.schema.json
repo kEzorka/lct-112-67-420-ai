@@ -1,0 +1,1395 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dds-ai/attempt-event/0.1.0-draft",
+  "$defs": {
+    "AckDeliveryUnconfirmed": {
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "format": "uuid",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "attempt_id": {
+          "format": "uuid",
+          "title": "Attempt Id",
+          "type": "string"
+        },
+        "seq": {
+          "description": "Порядковый номер в попытке, назначает бэкенд",
+          "minimum": 0,
+          "title": "Seq",
+          "type": "integer"
+        },
+        "server_ts": {
+          "format": "date-time",
+          "title": "Server Ts",
+          "type": "string"
+        },
+        "client_ts": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Client Ts"
+        },
+        "source": {
+          "$ref": "#/$defs/EventSource"
+        },
+        "ack_id": {
+          "format": "uuid",
+          "title": "Ack Id",
+          "type": "string"
+        },
+        "call_id": {
+          "format": "uuid",
+          "title": "Call Id",
+          "type": "string"
+        },
+        "utterance_id": {
+          "format": "uuid",
+          "title": "Utterance Id",
+          "type": "string"
+        },
+        "type": {
+          "const": "ack.delivery_unconfirmed",
+          "default": "ack.delivery_unconfirmed",
+          "title": "Type",
+          "type": "string"
+        },
+        "reason": {
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "event_id",
+        "attempt_id",
+        "seq",
+        "server_ts",
+        "source",
+        "ack_id",
+        "call_id",
+        "utterance_id",
+        "reason"
+      ],
+      "title": "AckDeliveryUnconfirmed",
+      "type": "object"
+    },
+    "AckGenerated": {
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "format": "uuid",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "attempt_id": {
+          "format": "uuid",
+          "title": "Attempt Id",
+          "type": "string"
+        },
+        "seq": {
+          "description": "Порядковый номер в попытке, назначает бэкенд",
+          "minimum": 0,
+          "title": "Seq",
+          "type": "integer"
+        },
+        "server_ts": {
+          "format": "date-time",
+          "title": "Server Ts",
+          "type": "string"
+        },
+        "client_ts": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Client Ts"
+        },
+        "source": {
+          "$ref": "#/$defs/EventSource"
+        },
+        "ack_id": {
+          "format": "uuid",
+          "title": "Ack Id",
+          "type": "string"
+        },
+        "call_id": {
+          "format": "uuid",
+          "title": "Call Id",
+          "type": "string"
+        },
+        "utterance_id": {
+          "format": "uuid",
+          "title": "Utterance Id",
+          "type": "string"
+        },
+        "type": {
+          "const": "ack.generated",
+          "default": "ack.generated",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "event_id",
+        "attempt_id",
+        "seq",
+        "server_ts",
+        "source",
+        "ack_id",
+        "call_id",
+        "utterance_id"
+      ],
+      "title": "AckGenerated",
+      "type": "object"
+    },
+    "AckPlayedByClient": {
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "format": "uuid",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "attempt_id": {
+          "format": "uuid",
+          "title": "Attempt Id",
+          "type": "string"
+        },
+        "seq": {
+          "description": "Порядковый номер в попытке, назначает бэкенд",
+          "minimum": 0,
+          "title": "Seq",
+          "type": "integer"
+        },
+        "server_ts": {
+          "format": "date-time",
+          "title": "Server Ts",
+          "type": "string"
+        },
+        "client_ts": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Client Ts"
+        },
+        "source": {
+          "$ref": "#/$defs/EventSource"
+        },
+        "ack_id": {
+          "format": "uuid",
+          "title": "Ack Id",
+          "type": "string"
+        },
+        "call_id": {
+          "format": "uuid",
+          "title": "Call Id",
+          "type": "string"
+        },
+        "utterance_id": {
+          "format": "uuid",
+          "title": "Utterance Id",
+          "type": "string"
+        },
+        "type": {
+          "const": "ack.played_by_client",
+          "default": "ack.played_by_client",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "event_id",
+        "attempt_id",
+        "seq",
+        "server_ts",
+        "source",
+        "ack_id",
+        "call_id",
+        "utterance_id"
+      ],
+      "title": "AckPlayedByClient",
+      "type": "object"
+    },
+    "AckSentToMedia": {
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "format": "uuid",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "attempt_id": {
+          "format": "uuid",
+          "title": "Attempt Id",
+          "type": "string"
+        },
+        "seq": {
+          "description": "Порядковый номер в попытке, назначает бэкенд",
+          "minimum": 0,
+          "title": "Seq",
+          "type": "integer"
+        },
+        "server_ts": {
+          "format": "date-time",
+          "title": "Server Ts",
+          "type": "string"
+        },
+        "client_ts": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Client Ts"
+        },
+        "source": {
+          "$ref": "#/$defs/EventSource"
+        },
+        "ack_id": {
+          "format": "uuid",
+          "title": "Ack Id",
+          "type": "string"
+        },
+        "call_id": {
+          "format": "uuid",
+          "title": "Call Id",
+          "type": "string"
+        },
+        "utterance_id": {
+          "format": "uuid",
+          "title": "Utterance Id",
+          "type": "string"
+        },
+        "type": {
+          "const": "ack.sent_to_media",
+          "default": "ack.sent_to_media",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "event_id",
+        "attempt_id",
+        "seq",
+        "server_ts",
+        "source",
+        "ack_id",
+        "call_id",
+        "utterance_id"
+      ],
+      "title": "AckSentToMedia",
+      "type": "object"
+    },
+    "CallState": {
+      "enum": [
+        "active",
+        "muted",
+        "hold",
+        "ended"
+      ],
+      "title": "CallState",
+      "type": "string"
+    },
+    "CallStateChanged": {
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "format": "uuid",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "attempt_id": {
+          "format": "uuid",
+          "title": "Attempt Id",
+          "type": "string"
+        },
+        "seq": {
+          "description": "Порядковый номер в попытке, назначает бэкенд",
+          "minimum": 0,
+          "title": "Seq",
+          "type": "integer"
+        },
+        "server_ts": {
+          "format": "date-time",
+          "title": "Server Ts",
+          "type": "string"
+        },
+        "client_ts": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Client Ts"
+        },
+        "source": {
+          "$ref": "#/$defs/EventSource"
+        },
+        "type": {
+          "const": "call_state_changed",
+          "default": "call_state_changed",
+          "title": "Type",
+          "type": "string"
+        },
+        "call_id": {
+          "format": "uuid",
+          "title": "Call Id",
+          "type": "string"
+        },
+        "state": {
+          "$ref": "#/$defs/CallState"
+        }
+      },
+      "required": [
+        "event_id",
+        "attempt_id",
+        "seq",
+        "server_ts",
+        "source",
+        "call_id",
+        "state"
+      ],
+      "title": "CallStateChanged",
+      "type": "object"
+    },
+    "CardOpened": {
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "format": "uuid",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "attempt_id": {
+          "format": "uuid",
+          "title": "Attempt Id",
+          "type": "string"
+        },
+        "seq": {
+          "description": "Порядковый номер в попытке, назначает бэкенд",
+          "minimum": 0,
+          "title": "Seq",
+          "type": "integer"
+        },
+        "server_ts": {
+          "format": "date-time",
+          "title": "Server Ts",
+          "type": "string"
+        },
+        "client_ts": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Client Ts"
+        },
+        "source": {
+          "$ref": "#/$defs/EventSource"
+        },
+        "type": {
+          "const": "card_opened",
+          "default": "card_opened",
+          "title": "Type",
+          "type": "string"
+        },
+        "card_id": {
+          "format": "uuid",
+          "title": "Card Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "event_id",
+        "attempt_id",
+        "seq",
+        "server_ts",
+        "source",
+        "card_id"
+      ],
+      "title": "CardOpened",
+      "type": "object"
+    },
+    "CardRevision": {
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "format": "uuid",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "attempt_id": {
+          "format": "uuid",
+          "title": "Attempt Id",
+          "type": "string"
+        },
+        "seq": {
+          "description": "Порядковый номер в попытке, назначает бэкенд",
+          "minimum": 0,
+          "title": "Seq",
+          "type": "integer"
+        },
+        "server_ts": {
+          "format": "date-time",
+          "title": "Server Ts",
+          "type": "string"
+        },
+        "client_ts": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Client Ts"
+        },
+        "source": {
+          "$ref": "#/$defs/EventSource"
+        },
+        "type": {
+          "const": "card_revision",
+          "default": "card_revision",
+          "title": "Type",
+          "type": "string"
+        },
+        "card_id": {
+          "format": "uuid",
+          "title": "Card Id",
+          "type": "string"
+        },
+        "revision": {
+          "minimum": 1,
+          "title": "Revision",
+          "type": "integer"
+        },
+        "changed_fields": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Changed Fields",
+          "type": "array"
+        }
+      },
+      "required": [
+        "event_id",
+        "attempt_id",
+        "seq",
+        "server_ts",
+        "source",
+        "card_id",
+        "revision",
+        "changed_fields"
+      ],
+      "title": "CardRevision",
+      "type": "object"
+    },
+    "ComponentName": {
+      "enum": [
+        "stt",
+        "tts",
+        "llm",
+        "semantic_judge",
+        "recommender",
+        "embedder"
+      ],
+      "title": "ComponentName",
+      "type": "string"
+    },
+    "DispatcherDecision": {
+      "enum": [
+        "respond",
+        "refuse",
+        "redirect"
+      ],
+      "title": "DispatcherDecision",
+      "type": "string"
+    },
+    "EventSource": {
+      "enum": [
+        "client",
+        "backend",
+        "ai_worker",
+        "media"
+      ],
+      "title": "EventSource",
+      "type": "string"
+    },
+    "FailureKind": {
+      "enum": [
+        "error",
+        "timeout",
+        "overflow",
+        "invalid_output"
+      ],
+      "title": "FailureKind",
+      "type": "string"
+    },
+    "HelpRequested": {
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "format": "uuid",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "attempt_id": {
+          "format": "uuid",
+          "title": "Attempt Id",
+          "type": "string"
+        },
+        "seq": {
+          "description": "Порядковый номер в попытке, назначает бэкенд",
+          "minimum": 0,
+          "title": "Seq",
+          "type": "integer"
+        },
+        "server_ts": {
+          "format": "date-time",
+          "title": "Server Ts",
+          "type": "string"
+        },
+        "client_ts": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Client Ts"
+        },
+        "source": {
+          "$ref": "#/$defs/EventSource"
+        },
+        "type": {
+          "const": "help_requested",
+          "default": "help_requested",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "event_id",
+        "attempt_id",
+        "seq",
+        "server_ts",
+        "source"
+      ],
+      "title": "HelpRequested",
+      "type": "object"
+    },
+    "HintShown": {
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "format": "uuid",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "attempt_id": {
+          "format": "uuid",
+          "title": "Attempt Id",
+          "type": "string"
+        },
+        "seq": {
+          "description": "Порядковый номер в попытке, назначает бэкенд",
+          "minimum": 0,
+          "title": "Seq",
+          "type": "integer"
+        },
+        "server_ts": {
+          "format": "date-time",
+          "title": "Server Ts",
+          "type": "string"
+        },
+        "client_ts": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Client Ts"
+        },
+        "source": {
+          "$ref": "#/$defs/EventSource"
+        },
+        "type": {
+          "const": "hint_shown",
+          "default": "hint_shown",
+          "title": "Type",
+          "type": "string"
+        },
+        "hint_id": {
+          "format": "uuid",
+          "title": "Hint Id",
+          "type": "string"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "event_id",
+        "attempt_id",
+        "seq",
+        "server_ts",
+        "source",
+        "hint_id",
+        "text"
+      ],
+      "title": "HintShown",
+      "type": "object"
+    },
+    "ModelFailure": {
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "format": "uuid",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "attempt_id": {
+          "format": "uuid",
+          "title": "Attempt Id",
+          "type": "string"
+        },
+        "seq": {
+          "description": "Порядковый номер в попытке, назначает бэкенд",
+          "minimum": 0,
+          "title": "Seq",
+          "type": "integer"
+        },
+        "server_ts": {
+          "format": "date-time",
+          "title": "Server Ts",
+          "type": "string"
+        },
+        "client_ts": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Client Ts"
+        },
+        "source": {
+          "$ref": "#/$defs/EventSource"
+        },
+        "type": {
+          "const": "model_failure",
+          "default": "model_failure",
+          "title": "Type",
+          "type": "string"
+        },
+        "component": {
+          "$ref": "#/$defs/ComponentName"
+        },
+        "kind": {
+          "$ref": "#/$defs/FailureKind"
+        },
+        "detail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Detail"
+        }
+      },
+      "required": [
+        "event_id",
+        "attempt_id",
+        "seq",
+        "server_ts",
+        "source",
+        "component",
+        "kind"
+      ],
+      "title": "ModelFailure",
+      "type": "object"
+    },
+    "ModelRef": {
+      "additionalProperties": false,
+      "description": "Версия модели и промпта, на которой принято решение (инвариант 6).",
+      "properties": {
+        "component": {
+          "minLength": 1,
+          "title": "Component",
+          "type": "string"
+        },
+        "model_name": {
+          "minLength": 1,
+          "title": "Model Name",
+          "type": "string"
+        },
+        "model_version": {
+          "minLength": 1,
+          "title": "Model Version",
+          "type": "string"
+        },
+        "prompt_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Prompt Version"
+        }
+      },
+      "required": [
+        "component",
+        "model_name",
+        "model_version"
+      ],
+      "title": "ModelRef",
+      "type": "object"
+    },
+    "NotificationShown": {
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "format": "uuid",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "attempt_id": {
+          "format": "uuid",
+          "title": "Attempt Id",
+          "type": "string"
+        },
+        "seq": {
+          "description": "Порядковый номер в попытке, назначает бэкенд",
+          "minimum": 0,
+          "title": "Seq",
+          "type": "integer"
+        },
+        "server_ts": {
+          "format": "date-time",
+          "title": "Server Ts",
+          "type": "string"
+        },
+        "client_ts": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Client Ts"
+        },
+        "source": {
+          "$ref": "#/$defs/EventSource"
+        },
+        "type": {
+          "const": "notification_shown",
+          "default": "notification_shown",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "event_id",
+        "attempt_id",
+        "seq",
+        "server_ts",
+        "source"
+      ],
+      "title": "NotificationShown",
+      "type": "object"
+    },
+    "SelectedAction": {
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "format": "uuid",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "attempt_id": {
+          "format": "uuid",
+          "title": "Attempt Id",
+          "type": "string"
+        },
+        "seq": {
+          "description": "Порядковый номер в попытке, назначает бэкенд",
+          "minimum": 0,
+          "title": "Seq",
+          "type": "integer"
+        },
+        "server_ts": {
+          "format": "date-time",
+          "title": "Server Ts",
+          "type": "string"
+        },
+        "client_ts": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Client Ts"
+        },
+        "source": {
+          "$ref": "#/$defs/EventSource"
+        },
+        "type": {
+          "const": "selected_action",
+          "default": "selected_action",
+          "title": "Type",
+          "type": "string"
+        },
+        "decision": {
+          "$ref": "#/$defs/DispatcherDecision"
+        }
+      },
+      "required": [
+        "event_id",
+        "attempt_id",
+        "seq",
+        "server_ts",
+        "source",
+        "decision"
+      ],
+      "title": "SelectedAction",
+      "type": "object"
+    },
+    "Speaker": {
+      "enum": [
+        "dispatcher",
+        "supervisor"
+      ],
+      "title": "Speaker",
+      "type": "string"
+    },
+    "SubmitAccepted": {
+      "additionalProperties": false,
+      "description": "Подтверждённая сервером сдача: точка attempt_submitted_at по C-01.",
+      "properties": {
+        "event_id": {
+          "format": "uuid",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "attempt_id": {
+          "format": "uuid",
+          "title": "Attempt Id",
+          "type": "string"
+        },
+        "seq": {
+          "description": "Порядковый номер в попытке, назначает бэкенд",
+          "minimum": 0,
+          "title": "Seq",
+          "type": "integer"
+        },
+        "server_ts": {
+          "format": "date-time",
+          "title": "Server Ts",
+          "type": "string"
+        },
+        "client_ts": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Client Ts"
+        },
+        "source": {
+          "$ref": "#/$defs/EventSource"
+        },
+        "type": {
+          "const": "submit_accepted",
+          "default": "submit_accepted",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "event_id",
+        "attempt_id",
+        "seq",
+        "server_ts",
+        "source"
+      ],
+      "title": "SubmitAccepted",
+      "type": "object"
+    },
+    "SubmitClicked": {
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "format": "uuid",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "attempt_id": {
+          "format": "uuid",
+          "title": "Attempt Id",
+          "type": "string"
+        },
+        "seq": {
+          "description": "Порядковый номер в попытке, назначает бэкенд",
+          "minimum": 0,
+          "title": "Seq",
+          "type": "integer"
+        },
+        "server_ts": {
+          "format": "date-time",
+          "title": "Server Ts",
+          "type": "string"
+        },
+        "client_ts": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Client Ts"
+        },
+        "source": {
+          "$ref": "#/$defs/EventSource"
+        },
+        "type": {
+          "const": "submit_clicked",
+          "default": "submit_clicked",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "event_id",
+        "attempt_id",
+        "seq",
+        "server_ts",
+        "source"
+      ],
+      "title": "SubmitClicked",
+      "type": "object"
+    },
+    "TextDelivered": {
+      "additionalProperties": false,
+      "description": "Доставка текста в аварийном текстовом режиме — не голосовое подтверждение.",
+      "properties": {
+        "event_id": {
+          "format": "uuid",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "attempt_id": {
+          "format": "uuid",
+          "title": "Attempt Id",
+          "type": "string"
+        },
+        "seq": {
+          "description": "Порядковый номер в попытке, назначает бэкенд",
+          "minimum": 0,
+          "title": "Seq",
+          "type": "integer"
+        },
+        "server_ts": {
+          "format": "date-time",
+          "title": "Server Ts",
+          "type": "string"
+        },
+        "client_ts": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Client Ts"
+        },
+        "source": {
+          "$ref": "#/$defs/EventSource"
+        },
+        "type": {
+          "const": "text_delivered",
+          "default": "text_delivered",
+          "title": "Type",
+          "type": "string"
+        },
+        "utterance_id": {
+          "format": "uuid",
+          "title": "Utterance Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "event_id",
+        "attempt_id",
+        "seq",
+        "server_ts",
+        "source",
+        "utterance_id"
+      ],
+      "title": "TextDelivered",
+      "type": "object"
+    },
+    "Timeout": {
+      "additionalProperties": false,
+      "description": "Тайм-аут — только событие: не создаёт действие, звонок или сдачу.",
+      "properties": {
+        "event_id": {
+          "format": "uuid",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "attempt_id": {
+          "format": "uuid",
+          "title": "Attempt Id",
+          "type": "string"
+        },
+        "seq": {
+          "description": "Порядковый номер в попытке, назначает бэкенд",
+          "minimum": 0,
+          "title": "Seq",
+          "type": "integer"
+        },
+        "server_ts": {
+          "format": "date-time",
+          "title": "Server Ts",
+          "type": "string"
+        },
+        "client_ts": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Client Ts"
+        },
+        "source": {
+          "$ref": "#/$defs/EventSource"
+        },
+        "type": {
+          "const": "timeout",
+          "default": "timeout",
+          "title": "Type",
+          "type": "string"
+        },
+        "limit": {
+          "enum": [
+            "open",
+            "processing"
+          ],
+          "title": "Limit",
+          "type": "string"
+        }
+      },
+      "required": [
+        "event_id",
+        "attempt_id",
+        "seq",
+        "server_ts",
+        "source",
+        "limit"
+      ],
+      "title": "Timeout",
+      "type": "object"
+    },
+    "Utterance": {
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "format": "uuid",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "attempt_id": {
+          "format": "uuid",
+          "title": "Attempt Id",
+          "type": "string"
+        },
+        "seq": {
+          "description": "Порядковый номер в попытке, назначает бэкенд",
+          "minimum": 0,
+          "title": "Seq",
+          "type": "integer"
+        },
+        "server_ts": {
+          "format": "date-time",
+          "title": "Server Ts",
+          "type": "string"
+        },
+        "client_ts": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Client Ts"
+        },
+        "source": {
+          "$ref": "#/$defs/EventSource"
+        },
+        "type": {
+          "const": "utterance",
+          "default": "utterance",
+          "title": "Type",
+          "type": "string"
+        },
+        "call_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "None — текстовый режим",
+          "title": "Call Id"
+        },
+        "utterance_id": {
+          "format": "uuid",
+          "title": "Utterance Id",
+          "type": "string"
+        },
+        "speaker": {
+          "$ref": "#/$defs/Speaker"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "final": {
+          "default": true,
+          "title": "Final",
+          "type": "boolean"
+        },
+        "start_ms": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start Ms"
+        },
+        "end_ms": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "End Ms"
+        },
+        "model_ref": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ModelRef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "fallback": {
+          "default": false,
+          "description": "Реплика из детерминированного шаблона (C-04)",
+          "title": "Fallback",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "event_id",
+        "attempt_id",
+        "seq",
+        "server_ts",
+        "source",
+        "utterance_id",
+        "speaker",
+        "text"
+      ],
+      "title": "Utterance",
+      "type": "object"
+    }
+  },
+  "discriminator": {
+    "mapping": {
+      "ack.delivery_unconfirmed": "#/$defs/AckDeliveryUnconfirmed",
+      "ack.generated": "#/$defs/AckGenerated",
+      "ack.played_by_client": "#/$defs/AckPlayedByClient",
+      "ack.sent_to_media": "#/$defs/AckSentToMedia",
+      "call_state_changed": "#/$defs/CallStateChanged",
+      "card_opened": "#/$defs/CardOpened",
+      "card_revision": "#/$defs/CardRevision",
+      "help_requested": "#/$defs/HelpRequested",
+      "hint_shown": "#/$defs/HintShown",
+      "model_failure": "#/$defs/ModelFailure",
+      "notification_shown": "#/$defs/NotificationShown",
+      "selected_action": "#/$defs/SelectedAction",
+      "submit_accepted": "#/$defs/SubmitAccepted",
+      "submit_clicked": "#/$defs/SubmitClicked",
+      "text_delivered": "#/$defs/TextDelivered",
+      "timeout": "#/$defs/Timeout",
+      "utterance": "#/$defs/Utterance"
+    },
+    "propertyName": "type"
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/NotificationShown"
+    },
+    {
+      "$ref": "#/$defs/CardOpened"
+    },
+    {
+      "$ref": "#/$defs/CardRevision"
+    },
+    {
+      "$ref": "#/$defs/SelectedAction"
+    },
+    {
+      "$ref": "#/$defs/SubmitClicked"
+    },
+    {
+      "$ref": "#/$defs/SubmitAccepted"
+    },
+    {
+      "$ref": "#/$defs/Timeout"
+    },
+    {
+      "$ref": "#/$defs/CallStateChanged"
+    },
+    {
+      "$ref": "#/$defs/Utterance"
+    },
+    {
+      "$ref": "#/$defs/AckGenerated"
+    },
+    {
+      "$ref": "#/$defs/AckSentToMedia"
+    },
+    {
+      "$ref": "#/$defs/AckPlayedByClient"
+    },
+    {
+      "$ref": "#/$defs/AckDeliveryUnconfirmed"
+    },
+    {
+      "$ref": "#/$defs/TextDelivered"
+    },
+    {
+      "$ref": "#/$defs/HintShown"
+    },
+    {
+      "$ref": "#/$defs/HelpRequested"
+    },
+    {
+      "$ref": "#/$defs/ModelFailure"
+    }
+  ]
+}
