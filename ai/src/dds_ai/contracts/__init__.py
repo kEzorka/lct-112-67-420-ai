@@ -6,6 +6,8 @@ from .card import CardRevisionRecord, IncidentCard
 from .criteria import CriterionResult
 from .dialogue import Interlocutor, SupervisorReply
 from .events import AttemptEvent, attempt_event_adapter
+from .knowledge import CorpusVersion, KnowledgeFragment
+from .nlp import NlpExtraction
 from .profile import Recommendation, SkillProfile
 from .remarks import Remark
 from .routing import RoutingDecision, RoutingRequest
@@ -35,6 +37,9 @@ SCHEMA_MODELS: dict[str, type[BaseModel] | TypeAdapter] = {
     "adapter-policy": AdapterPolicy,
     "failure-record": FailureRecord,
     "preflight-report": PreflightReport,
+    "corpus-version": CorpusVersion,
+    "knowledge-fragment": KnowledgeFragment,
+    "nlp-extraction": NlpExtraction,
 }
 
 __all__ = ["CONTRACTS_VERSION", "SCHEMA_MODELS", "AttemptEvent"]

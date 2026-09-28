@@ -1,0 +1,274 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dds-ai/nlp-extraction/0.1.0-draft",
+  "$defs": {
+    "ContradictionFlag": {
+      "additionalProperties": false,
+      "description": "Противоречивое описание: минимум два несовместимых упоминания одного слота.",
+      "properties": {
+        "slot": {
+          "minLength": 1,
+          "title": "Slot",
+          "type": "string"
+        },
+        "description": {
+          "minLength": 1,
+          "title": "Description",
+          "type": "string"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/TextSpan"
+          },
+          "minItems": 2,
+          "title": "Evidence",
+          "type": "array"
+        }
+      },
+      "required": [
+        "slot",
+        "description",
+        "evidence"
+      ],
+      "title": "ContradictionFlag",
+      "type": "object"
+    },
+    "ExtractedSlot": {
+      "additionalProperties": false,
+      "description": "Слот карточки, извлечённый из текста (адрес, число пострадавших, обстоятельства).",
+      "properties": {
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "state": {
+          "$ref": "#/$defs/SlotState"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Value"
+        },
+        "evidence": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TextSpan"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "name",
+        "state"
+      ],
+      "title": "ExtractedSlot",
+      "type": "object"
+    },
+    "IncidentTypeHint": {
+      "additionalProperties": false,
+      "description": "Один из top-k кандидатов типа происшествия.",
+      "properties": {
+        "incident_type": {
+          "minLength": 1,
+          "title": "Incident Type",
+          "type": "string"
+        },
+        "confidence": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Только если модель его отдаёт; у правил — None",
+          "title": "Confidence"
+        }
+      },
+      "required": [
+        "incident_type"
+      ],
+      "title": "IncidentTypeHint",
+      "type": "object"
+    },
+    "MissingInfoFlag": {
+      "additionalProperties": false,
+      "description": "Пропуск обязательных сведений.",
+      "properties": {
+        "slot": {
+          "minLength": 1,
+          "title": "Slot",
+          "type": "string"
+        },
+        "description": {
+          "minLength": 1,
+          "title": "Description",
+          "type": "string"
+        }
+      },
+      "required": [
+        "slot",
+        "description"
+      ],
+      "title": "MissingInfoFlag",
+      "type": "object"
+    },
+    "ModelRef": {
+      "additionalProperties": false,
+      "description": "Версия модели и промпта, на которой принято решение (инвариант 6).",
+      "properties": {
+        "component": {
+          "minLength": 1,
+          "title": "Component",
+          "type": "string"
+        },
+        "model_name": {
+          "minLength": 1,
+          "title": "Model Name",
+          "type": "string"
+        },
+        "model_version": {
+          "minLength": 1,
+          "title": "Model Version",
+          "type": "string"
+        },
+        "prompt_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Prompt Version"
+        }
+      },
+      "required": [
+        "component",
+        "model_name",
+        "model_version"
+      ],
+      "title": "ModelRef",
+      "type": "object"
+    },
+    "SlotState": {
+      "enum": [
+        "known",
+        "unknown",
+        "missing"
+      ],
+      "title": "SlotState",
+      "type": "string"
+    },
+    "TextSpan": {
+      "additionalProperties": false,
+      "description": "Символьное смещение во входном тексте — не транскрипт с таймкодами (Evidence из\ncommon.py), т.к. NLP-извлечение работает и с текстом без временной разметки (SMS,\nописание).",
+      "properties": {
+        "excerpt": {
+          "minLength": 1,
+          "title": "Excerpt",
+          "type": "string"
+        },
+        "start": {
+          "minimum": 0,
+          "title": "Start",
+          "type": "integer"
+        },
+        "end": {
+          "minimum": 0,
+          "title": "End",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "excerpt",
+        "start",
+        "end"
+      ],
+      "title": "TextSpan",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "ML hints: служб не назначает (инвариант из 4.2/6.11), confidence только у модели (инв. 5).",
+  "properties": {
+    "top_k": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/IncidentTypeHint"
+      },
+      "title": "Top K",
+      "type": "array"
+    },
+    "tags": {
+      "default": [],
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Tags",
+      "type": "array"
+    },
+    "slots": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/ExtractedSlot"
+      },
+      "title": "Slots",
+      "type": "array"
+    },
+    "missing": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/MissingInfoFlag"
+      },
+      "title": "Missing",
+      "type": "array"
+    },
+    "contradictions": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/ContradictionFlag"
+      },
+      "title": "Contradictions",
+      "type": "array"
+    },
+    "needs_clarification": {
+      "default": false,
+      "title": "Needs Clarification",
+      "type": "boolean"
+    },
+    "model_ref": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ModelRef"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "None — правило (базовая реализация), иначе версия модели"
+    }
+  },
+  "title": "NlpExtraction",
+  "type": "object"
+}
