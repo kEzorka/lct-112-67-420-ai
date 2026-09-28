@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dds-ai/knowledge-fragment/0.1.0-draft",
+  "$defs": {
+    "ApprovalStatus": {
+      "description": "Статус утверждения источника/фрагмента (6.10).",
+      "enum": [
+        "draft",
+        "approved",
+        "archived"
+      ],
+      "title": "ApprovalStatus",
+      "type": "string"
+    },
+    "FragmentSource": {
+      "additionalProperties": false,
+      "description": "Ссылка фрагмента на исходный документ (обязательна — приёмка 6.10).",
+      "properties": {
+        "doc_id": {
+          "minLength": 1,
+          "title": "Doc Id",
+          "type": "string"
+        },
+        "title": {
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "section": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Section"
+        },
+        "source": {
+          "minLength": 1,
+          "title": "Source",
+          "type": "string"
+        },
+        "approval_status": {
+          "$ref": "#/$defs/ApprovalStatus"
+        }
+      },
+      "required": [
+        "doc_id",
+        "title",
+        "source",
+        "approval_status"
+      ],
+      "title": "FragmentSource",
+      "type": "object"
+    },
+    "VersionRef": {
+      "additionalProperties": false,
+      "description": "Ссылка на версионируемый артефакт: сценарий, правила, рубрику, политику времени.",
+      "properties": {
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "version": {
+          "minLength": 1,
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version"
+      ],
+      "title": "VersionRef",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Чанк корпуса с метаданными: источник, раздел, версия, дата, статус утверждения.",
+  "properties": {
+    "fragment_id": {
+      "minLength": 1,
+      "title": "Fragment Id",
+      "type": "string"
+    },
+    "corpus": {
+      "$ref": "#/$defs/VersionRef"
+    },
+    "source": {
+      "$ref": "#/$defs/FragmentSource"
+    },
+    "chunk_index": {
+      "minimum": 0,
+      "title": "Chunk Index",
+      "type": "integer"
+    },
+    "text": {
+      "minLength": 1,
+      "title": "Text",
+      "type": "string"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "fragment_id",
+    "corpus",
+    "source",
+    "chunk_index",
+    "text",
+    "created_at"
+  ],
+  "title": "KnowledgeFragment",
+  "type": "object"
+}

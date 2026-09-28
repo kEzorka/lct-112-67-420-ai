@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dds-ai/corpus-version/0.1.0-draft",
+  "additionalProperties": false,
+  "description": "Версия проиндексированного корпуса (входит в снимок версий сценария, D-003).",
+  "properties": {
+    "name": {
+      "default": "knowledge_corpus",
+      "minLength": 1,
+      "title": "Name",
+      "type": "string"
+    },
+    "version": {
+      "minLength": 1,
+      "title": "Version",
+      "type": "string"
+    },
+    "built_at": {
+      "format": "date-time",
+      "title": "Built At",
+      "type": "string"
+    },
+    "document_count": {
+      "minimum": 0,
+      "title": "Document Count",
+      "type": "integer"
+    },
+    "fragment_count": {
+      "minimum": 0,
+      "title": "Fragment Count",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "version",
+    "built_at",
+    "document_count",
+    "fragment_count"
+  ],
+  "title": "CorpusVersion",
+  "type": "object"
+}
