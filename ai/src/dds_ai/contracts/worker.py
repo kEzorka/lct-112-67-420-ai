@@ -47,6 +47,8 @@ class ComponentStatus(Contract):
     health: ComponentHealth
     model_version: str | None = None
     queue_length: int = Field(default=0, ge=0)
+    lane: Lane | None = Field(default=None, description="Полоса исполнителя; None — вне воркера")
+    running: int = Field(default=0, ge=0)
 
 
 class PreflightReport(Contract):

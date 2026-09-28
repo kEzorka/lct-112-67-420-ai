@@ -1,0 +1,40 @@
+{
+  "scenario": {"name": "syn-002-gas-redirect", "version": "1"},
+  "title": "СИНТЕТИКА: запах газа в подъезде — перенаправление, руководитель сначала занят",
+  "provenance": "synthetic",
+  "incident_type": "gas_smell",
+  "published_facts": [
+    {"fact_id": "card.address", "topic": "address", "label": "Адрес", "state": "known", "value": "г. Учебный, пр. Условный, д. 7, подъезд 2"},
+    {"fact_id": "card.incident_type", "topic": "incident_type", "label": "Тип происшествия", "state": "known", "value": "запах газа"},
+    {"fact_id": "card.description", "topic": "description", "label": "Описание", "state": "known", "value": "Сильный запах газа на лестничной площадке"},
+    {"fact_id": "card.victims", "topic": "victims", "label": "Пострадавшие", "state": "none"}
+  ],
+  "interlocutors": [
+    {
+      "interlocutor": {
+        "role_id": "supervisor",
+        "published_fact_ids": ["sv.victims"],
+        "allowed_actions": ["listen", "clarify", "read_back", "confirm_receipt"]
+      },
+      "facts": [
+        {"fact_id": "sv.victims", "topic": "victims", "label": "Пострадавшие", "state": "none", "question_patterns": ["пострадав", "ранен"]}
+      ],
+      "report_items": [
+        {"item_id": "essence.gas", "element": "essence", "patterns": ["запах газ", "утечк газ"]},
+        {"item_id": "location.address", "element": "location", "patterns": ["условн 7"]},
+        {"item_id": "circumstances.stairs", "element": "circumstances", "patterns": ["подъезд", "лестнич", "площадк"]},
+        {"item_id": "decision.redirect", "element": "dds_decision", "patterns": ["перенаправ", "передал", "передаем", "переадрес"]},
+        {"item_id": "request.ack", "element": "requested_action", "patterns": ["прошу", "просим"]}
+      ],
+      "dial_outcomes": ["busy", "no_answer"]
+    }
+  ],
+  "reference": {
+    "reference": {"name": "syn-002-gas-redirect.ref", "version": "1"},
+    "expected_decision": "redirect",
+    "expected_fields": {
+      "address": "г. Учебный, пр. Условный, д. 7, подъезд 2",
+      "incident_type": "запах газа"
+    }
+  }
+}

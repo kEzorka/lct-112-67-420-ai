@@ -13,6 +13,7 @@ from uuid import UUID
 from pydantic import AwareDatetime, Field, TypeAdapter
 
 from .common import Contract, ModelRef, NonEmptyStr
+from .dialogue import ScenarioCallState
 
 
 class EventSource(StrEnum):
@@ -94,6 +95,12 @@ class SubmitAccepted(_Event):
     """Подтверждённая сервером сдача: точка attempt_submitted_at по C-01."""
 
     type: Literal["submit_accepted"] = "submit_accepted"
+    incomplete: bool = Field(
+        default=False, description="«Завершить с невыполненными шагами» (C-02): не успех"
+    )
+    missing_steps: tuple[NonEmptyStr, ...] = Field(
+        default=(), description="Наблюдаемые пропуски; фиктивные события не создаются (C-02)"
+    )
 
 
 class Timeout(_Event):
@@ -107,6 +114,15 @@ class CallStateChanged(_Event):
     type: Literal["call_state_changed"] = "call_state_changed"
     call_id: UUID
     state: CallState
+
+
+class ScenarioCallStateChanged(_Event):
+    """Сценарное состояние вызова (занято, не отвечает, обрыв) — не технический сбой."""
+
+    type: Literal["scenario_call_state"] = "scenario_call_state"
+    call_id: UUID | None = Field(default=None, description="None — текстовый режим")
+    role_id: NonEmptyStr
+    state: ScenarioCallState
 
 
 class Utterance(_Event):
@@ -152,6 +168,9 @@ class TextDelivered(_Event):
 
     type: Literal["text_delivered"] = "text_delivered"
     utterance_id: UUID
+    ack_id: UUID | None = Field(
+        default=None, description="Подтверждение в текстовом режиме; не голосовое (C-05)"
+    )
 
 
 class HintShown(_Event):
@@ -180,6 +199,7 @@ AttemptEvent = Annotated[
     | SubmitAccepted
     | Timeout
     | CallStateChanged
+    | ScenarioCallStateChanged
     | Utterance
     | AckGenerated
     | AckSentToMedia

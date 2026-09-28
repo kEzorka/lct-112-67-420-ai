@@ -12,10 +12,11 @@ from .profile import Recommendation, SkillProfile
 from .remarks import Remark
 from .routing import RoutingDecision, RoutingRequest
 from .rubric import Rubric
+from .scenario import Scenario
 from .scoring import AttemptVersionSnapshot, ScoreSummary, ScoreVersion
 from .worker import AdapterPolicy, FailureRecord, PreflightReport
 
-CONTRACTS_VERSION = "0.1.0-draft"
+CONTRACTS_VERSION = "0.2.0-draft"
 
 # Имя файла JSON Schema в /contracts → модель.
 SCHEMA_MODELS: dict[str, type[BaseModel] | TypeAdapter] = {
@@ -40,6 +41,7 @@ SCHEMA_MODELS: dict[str, type[BaseModel] | TypeAdapter] = {
     "corpus-version": CorpusVersion,
     "knowledge-fragment": KnowledgeFragment,
     "nlp-extraction": NlpExtraction,
+    "scenario": Scenario,
 }
 
 __all__ = ["CONTRACTS_VERSION", "SCHEMA_MODELS", "AttemptEvent"]

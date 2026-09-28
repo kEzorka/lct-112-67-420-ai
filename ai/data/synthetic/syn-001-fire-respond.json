@@ -1,0 +1,44 @@
+{
+  "scenario": {"name": "syn-001-fire-respond", "version": "1"},
+  "title": "СИНТЕТИКА: задымление квартиры в жилом доме — ДДС реагирует",
+  "provenance": "synthetic",
+  "incident_type": "fire_residential",
+  "published_facts": [
+    {"fact_id": "card.address", "topic": "address", "label": "Адрес", "state": "known", "value": "г. Учебный, ул. Тестовая, д. 12, кв. 5"},
+    {"fact_id": "card.incident_type", "topic": "incident_type", "label": "Тип происшествия", "state": "known", "value": "пожар в жилом доме"},
+    {"fact_id": "card.description", "topic": "description", "label": "Описание", "state": "known", "value": "Заявитель видит дым из окна квартиры соседей"},
+    {"fact_id": "card.victims", "topic": "victims", "label": "Пострадавшие", "state": "unknown"}
+  ],
+  "interlocutors": [
+    {
+      "interlocutor": {
+        "role_id": "supervisor",
+        "published_fact_ids": ["sv.victims", "sv.floors"],
+        "allowed_actions": ["listen", "clarify", "read_back", "confirm_receipt"]
+      },
+      "facts": [
+        {"fact_id": "sv.victims", "topic": "victims", "label": "Число пострадавших", "state": "unknown", "question_patterns": ["пострадав", "ранен", "жертв"]},
+        {"fact_id": "sv.floors", "topic": "floors", "label": "Этажность дома", "state": "known", "value": "9 этажей", "question_patterns": ["этаж"]}
+      ],
+      "report_items": [
+        {"item_id": "essence.fire", "element": "essence", "patterns": ["пожар$", "горит", "возгоран", "задымл"]},
+        {"item_id": "location.address", "element": "location", "patterns": ["тестов 12"]},
+        {"item_id": "circumstances.smoke", "element": "circumstances", "patterns": ["дым из окн", "дым идет", "дым в квартир"]},
+        {"item_id": "decision.respond", "element": "dds_decision", "patterns": ["реагир", "принял к исполн", "принимаем к исполн", "направил", "направляем", "выслал"]},
+        {"item_id": "request.ack", "element": "requested_action", "patterns": ["прошу", "просим"]}
+      ]
+    },
+    {
+      "interlocutor": {"role_id": "operator_112", "allowed_actions": ["listen"]},
+      "enabled": false
+    }
+  ],
+  "reference": {
+    "reference": {"name": "syn-001-fire-respond.ref", "version": "1"},
+    "expected_decision": "respond",
+    "expected_fields": {
+      "address": "г. Учебный, ул. Тестовая, д. 12, кв. 5",
+      "incident_type": "пожар в жилом доме"
+    }
+  }
+}

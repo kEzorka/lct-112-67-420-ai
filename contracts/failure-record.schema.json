@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "dds-ai/failure-record/0.1.0-draft",
+  "$id": "dds-ai/failure-record/0.2.0-draft",
   "$defs": {
     "ComponentName": {
       "enum": [

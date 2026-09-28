@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "dds-ai/preflight-report/0.1.0-draft",
+  "$id": "dds-ai/preflight-report/0.2.0-draft",
   "$defs": {
     "ComponentHealth": {
       "enum": [
@@ -49,6 +49,24 @@
           "minimum": 0,
           "title": "Queue Length",
           "type": "integer"
+        },
+        "lane": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Lane"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Полоса исполнителя; None — вне воркера"
+        },
+        "running": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Running",
+          "type": "integer"
         }
       },
       "required": [
@@ -57,6 +75,15 @@
       ],
       "title": "ComponentStatus",
       "type": "object"
+    },
+    "Lane": {
+      "description": "Синхронная нагрузка живого звонка отделена от фоновой.",
+      "enum": [
+        "interactive",
+        "background"
+      ],
+      "title": "Lane",
+      "type": "string"
     }
   },
   "additionalProperties": false,

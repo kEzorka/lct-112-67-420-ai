@@ -1,0 +1,14 @@
+{
+  "profile": "cpu",
+  "_comment": "Рабочие значения команды до замера (M2–M3, perf-report). Интерактивная полоса — живой звонок; фоновая — генерация, индексация, оценивание, аналитика.",
+  "policies": [
+    {"component": "llm", "lane": "interactive", "timeout_s": 8, "max_queue": 8, "max_concurrency": 2, "failure_policy_version": "c04-draft-1"},
+    {"component": "llm", "lane": "background", "timeout_s": 120, "max_queue": 32, "max_concurrency": 1, "failure_policy_version": "c04-draft-1"},
+    {"component": "stt", "lane": "interactive", "timeout_s": 5, "max_queue": 16, "max_concurrency": 2, "failure_policy_version": "c04-draft-1"},
+    {"component": "tts", "lane": "interactive", "timeout_s": 5, "max_queue": 16, "max_concurrency": 2, "failure_policy_version": "c04-draft-1"},
+    {"component": "tts", "lane": "background", "timeout_s": 60, "max_queue": 64, "max_concurrency": 1, "failure_policy_version": "c04-draft-1"},
+    {"component": "semantic_judge", "lane": "background", "timeout_s": 60, "max_queue": 64, "max_concurrency": 1, "failure_policy_version": "c04-draft-1"},
+    {"component": "recommender", "lane": "background", "timeout_s": 10, "max_queue": 32, "max_concurrency": 1, "failure_policy_version": "c04-draft-1"},
+    {"component": "embedder", "lane": "background", "timeout_s": 60, "max_queue": 64, "max_concurrency": 1, "failure_policy_version": "c04-draft-1"}
+  ]
+}
