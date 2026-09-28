@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dds-ai/group-error-report/0.3.0-draft",
+  "$defs": {
+    "ErrorFrequencyBucket": {
+      "additionalProperties": false,
+      "properties": {
+        "remark_type": {
+          "$ref": "#/$defs/RemarkType"
+        },
+        "group_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Группа рубрики критерия замечания; None — без привязки",
+          "title": "Group Id"
+        },
+        "dds_profile": {
+          "minLength": 1,
+          "title": "Dds Profile",
+          "type": "string"
+        },
+        "difficulty_band": {
+          "minLength": 1,
+          "title": "Difficulty Band",
+          "type": "string"
+        },
+        "count": {
+          "description": "Число замечаний этого типа/группы в сегменте",
+          "minimum": 1,
+          "title": "Count",
+          "type": "integer"
+        },
+        "attempt_ids": {
+          "description": "Раскрытие до попыток",
+          "items": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Attempt Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "remark_type",
+        "dds_profile",
+        "difficulty_band",
+        "count",
+        "attempt_ids"
+      ],
+      "title": "ErrorFrequencyBucket",
+      "type": "object"
+    },
+    "RemarkType": {
+      "enum": [
+        "time",
+        "fact_field",
+        "action_route",
+        "communication",
+        "sequence",
+        "grammar",
+        "source_uncertainty",
+        "technical_fault"
+      ],
+      "title": "RemarkType",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "generated_at": {
+      "format": "date-time",
+      "title": "Generated At",
+      "type": "string"
+    },
+    "rubric_version": {
+      "minLength": 1,
+      "title": "Rubric Version",
+      "type": "string"
+    },
+    "buckets": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/ErrorFrequencyBucket"
+      },
+      "title": "Buckets",
+      "type": "array"
+    },
+    "technical_fault_count": {
+      "description": "Технические сбои — отдельно, не ошибка ученика/группы (инвариант 4)",
+      "minimum": 0,
+      "title": "Technical Fault Count",
+      "type": "integer"
+    },
+    "not_checked_count": {
+      "description": "Результаты критериев со статусом not_checked",
+      "minimum": 0,
+      "title": "Not Checked Count",
+      "type": "integer"
+    },
+    "total_criteria_count": {
+      "description": "Все рассмотренные результаты критериев (не только valid_score)",
+      "minimum": 0,
+      "title": "Total Criteria Count",
+      "type": "integer"
+    },
+    "total_valid_attempts": {
+      "description": "Попытки с valid_score, вошедшие в buckets",
+      "minimum": 0,
+      "title": "Total Valid Attempts",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "generated_at",
+    "rubric_version",
+    "technical_fault_count",
+    "not_checked_count",
+    "total_criteria_count",
+    "total_valid_attempts"
+  ],
+  "title": "GroupErrorReport",
+  "type": "object"
+}

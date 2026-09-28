@@ -30,6 +30,8 @@ from ..contracts.events import (
     DispatcherDecision,
     EventSource,
     FailureKind,
+    HelpRequested,
+    HintShown,
     ModelFailure,
     NotificationShown,
     ScenarioCallStateChanged,
@@ -40,6 +42,7 @@ from ..contracts.events import (
     TextDelivered,
     Utterance,
 )
+from ..contracts.mode import AttemptTrack, TrainingMode
 from ..contracts.remarks import Remark
 from ..contracts.routing import RoutingRequest
 from ..contracts.rubric import Rubric
@@ -47,6 +50,7 @@ from ..contracts.scenario import Scenario
 from ..contracts.scoring import ScoreSummary
 from ..contracts.worker import FailureRecord, Lane
 from ..faults import ComponentFailure
+from ..hints.track import HintDenied, attempt_track, can_show_guided_hint
 from ..mocks.card_store import InMemoryCardStore
 from ..mocks.event_log import InMemoryEventLog, ManualClock
 from ..mocks.routing import Rule, TableRoutingEngine
@@ -91,6 +95,7 @@ class Evaluation:
     results: tuple[CriterionResult, ...]
     summary: ScoreSummary
     remarks: tuple[Remark, ...] = ()
+    track: AttemptTrack = AttemptTrack.INDEPENDENT
 
     def by_id(self, criterion_id: str) -> CriterionResult:
         return next(r for r in self.results if r.criterion_id == criterion_id)
@@ -113,11 +118,13 @@ class TrainingSession:
         attempt_id: UUID | None = None,
         dispatcher_id: UUID | None = None,
         card_seed: int | None = None,
+        mode: TrainingMode = TrainingMode.INDEPENDENT,
     ):
         if channel is Channel.VOICE and (tts is None or media is None):
             raise ValueError("voice channel requires tts and media")
         self.scenario = scenario
         self.channel = channel
+        self.mode = mode
         self.attempt_id = attempt_id or uuid4()
         self.dispatcher_id = dispatcher_id or uuid4()
         self.clock = clock or ManualClock()
@@ -153,6 +160,32 @@ class TrainingSession:
     @property
     def events(self):
         return self.log.events
+
+    @property
+    def track(self) -> AttemptTrack:
+        """Трек попытки для профиля/рейтинга (D-041): guided остаётся guided; independent
+        становится supported, если был запрос помощи, — так же, как решает `hints.attempt_track`."""
+        return attempt_track(self.mode, self.log.events)
+
+    # --- подсказки и режимы (6.7, D-041) --------------------------------------------------
+
+    def show_hint(self, text: str, *, hint_id: UUID | None = None) -> None:
+        """«Делай как я»: демонстрация/пошаговая подсказка — всегда событие в истории попытки."""
+        if not can_show_guided_hint(self.mode):
+            raise HintDenied("guided hints are only available in guided mode")
+        self.log.append(
+            HintShown, source=EventSource.AI_WORKER, hint_id=hint_id or uuid4(), text=text
+        )
+
+    def request_help(self) -> None:
+        """Самостоятельный режим: запрос помощи переводит попытку в «с поддержкой» (D-041) —
+        меняет только классификацию (`track` перестаёт быть `independent`, попытка исключается
+        из самостоятельного рейтинга). Подсказка о правильном действии по-прежнему не
+        показывается до завершения попытки — это не открывает `show_hint()` (см. `hints.track`).
+        """
+        if self.mode is not TrainingMode.INDEPENDENT:
+            raise RuntimeError("help_requested applies only to the independent mode")
+        self.log.append(HelpRequested, source=EventSource.CLIENT)
 
     # --- действия ученика ----------------------------------------------------------------
 
@@ -285,7 +318,10 @@ class TrainingSession:
         )
         results = tuple(evaluator.results(rubric))
         return Evaluation(
-            results=results, summary=score(rubric, results), remarks=evaluator.remarks()
+            results=results,
+            summary=score(rubric, results),
+            remarks=evaluator.remarks(),
+            track=self.track,
         )
 
     # --- события ИИ-воркера и медиатракта --------------------------------------------------

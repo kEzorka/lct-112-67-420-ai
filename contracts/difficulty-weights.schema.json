@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dds-ai/difficulty-weights/0.3.0-draft",
+  "$defs": {
+    "DifficultyFactor": {
+      "description": "Начальные факторы (D-043); начальные веса равны — см. `ai/config/difficulty.json`.",
+      "enum": [
+        "ambiguity",
+        "circumstances",
+        "services",
+        "additions",
+        "speech"
+      ],
+      "title": "DifficultyFactor",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Версионируемые веса факторов (D-043): начальные — равные, публикует преподаватель.",
+  "properties": {
+    "weights_version": {
+      "minLength": 1,
+      "title": "Weights Version",
+      "type": "string"
+    },
+    "weights": {
+      "additionalProperties": {
+        "type": "number"
+      },
+      "description": "Вес каждого фактора, ≥ 0",
+      "propertyNames": {
+        "$ref": "#/$defs/DifficultyFactor"
+      },
+      "title": "Weights",
+      "type": "object"
+    }
+  },
+  "required": [
+    "weights_version",
+    "weights"
+  ],
+  "title": "DifficultyWeights",
+  "type": "object"
+}

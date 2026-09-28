@@ -18,7 +18,11 @@
 | `attempt-version-snapshot` | бэкенд | бэкенд при старте; ИИ-воркер отдаёт версии моделей в preflight |
 | `routing-request`, `routing-decision` | движок маршрутизации | только движок; LLM службы не выбирает |
 | `interlocutor`, `supervisor-reply` | ИИ-контур | ИИ-руководитель |
-| `skill-profile`, `recommendation` | бэкенд | ИИ-контур (рекомендатель) |
+| `skill-profile`, `recommendation` | бэкенд | ИИ-контур (`dds_ai.profile`); поправка/аудит C-08 — новая версия, не перезапись |
+| `task-pool` | бэкенд (пул назначает преподаватель) | преподаватель публикует; `Recommendation.pool_snapshot_id`/`pool_task_ids` — снимок на момент выбора (C-08) |
+| `error-explanation` | бэкенд | `dds_ai.hints.explain_errors` — из замечаний-ошибок ученика после завершения попытки (Q&A 8) |
+| `difficulty-vector`, `difficulty-weights`, `difficulty-score`, `difficulty-proposal` | бэкенд (публикует преподаватель) | `dds_ai.difficulty` — ИИ предлагает вектор с объяснением по фактору (`difficulty-proposal`); преподаватель утверждает и публикует `difficulty-vector` |
+| `group-error-report` | ИИ-контур (по запросу преподавателя) | `dds_ai.analytics.build_group_error_report` — только из `valid_score`, технические сбои и `not_checked` отдельно |
 | `adapter-policy`, `failure-record`, `preflight-report` | ИИ-воркер | ИИ-воркер; бэкенд показывает администратору |
 | `scenario` | бэкенд (публикация), ИИ-контур (черновики M4) | преподаватель утверждает; на M1 — синтетика в `ai/data/synthetic/` |
 
