@@ -27,6 +27,7 @@ from dds_ai.faults import FaultInjector, InvalidOutput
 from dds_ai.grammar.checker import IssueKind, check_text
 from dds_ai.judging.address_compare import AddressMatch
 from dds_ai.judging.address_compare import compare as compare_address
+from dds_ai.judging.policy import JudgePolicy
 from dds_ai.judging.semantic_judge import LLMSemanticJudge
 from dds_ai.remarks import build_remarks, grammar_criterion
 from dds_ai.scenarios.card_generation import generate_card
@@ -315,11 +316,35 @@ def test_two_paraphrases_of_the_same_fact_get_the_same_score():
     assert (a.status, a.value) == (b.status, b.value) == (CriterionStatus.PASSED, 1)
 
 
-def test_field_fact_none_match_fails_with_concrete_comparison():
+def test_field_fact_confident_none_is_not_checked_by_default_policy():
+    """F-2: пока согласие ниже W-03, модель одна не выносит `failed` для `field_fact`, если
+    критерий не перечислен в `JudgePolicy.failable_criteria` (пусто по умолчанию) — уверенное
+    несовпадение уходит в `not_checked`, ждёт эксперта, не штраф (инвариант 4)."""
     judge = LLMSemanticJudge(ScriptedLLM(match="none", reason_code="wrong_value"))
+    assert judge.policy.failable_criteria == frozenset()
+    r = judge.judge("card.circumstances", _field_context("Всё в порядке, пожара нет."))
+    assert r.status is CriterionStatus.NOT_CHECKED and r.value is None
+    assert "wrong_value" in r.explanation
+    assert "эксперт" in r.explanation.lower()
+
+
+def test_field_fact_none_match_fails_when_criterion_is_in_policy():
+    """Критерий, явно разрешённый конфигом (`JudgePolicy.failable_criteria`), может получить
+    `failed` от модели — конкретное сравнение с указанием причины."""
+    policy = JudgePolicy(failable_criteria=frozenset({"card.circumstances"}))
+    judge = LLMSemanticJudge(ScriptedLLM(match="none", reason_code="wrong_value"), policy=policy)
     r = judge.judge("card.circumstances", _field_context("Всё в порядке, пожара нет."))
     assert r.status is CriterionStatus.FAILED and r.value == 0
     assert "wrong_value" in r.explanation
+
+
+def test_field_fact_none_match_not_failed_for_criterion_outside_policy():
+    """Конфиг разрешает `failed` только перечисленным критериям — `manual.additions` здесь не
+    входит в политику, значит остаётся `not_checked`, даже когда `card.circumstances` разрешён."""
+    policy = JudgePolicy(failable_criteria=frozenset({"card.circumstances"}))
+    judge = LLMSemanticJudge(ScriptedLLM(match="none", reason_code="wrong_value"), policy=policy)
+    r = judge.judge("manual.additions", _field_context("Всё в порядке, пожара нет."))
+    assert r.status is CriterionStatus.NOT_CHECKED and r.value is None
 
 
 def test_unavailable_field_is_not_checked_not_penalized():

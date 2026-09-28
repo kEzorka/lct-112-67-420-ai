@@ -22,8 +22,15 @@
 никогда не выставляет `failed` — только `passed` (все элементы подтверждены семантически)
 или `not_checked` (что-то не подтверждено — паравраза не распознана, транскрипт неразборчив
 или повреждён), поэтому STT-устойчивость (раздел 8 промпта) не может стать штрафом только
-из-за того, что ключевые слова M1 не совпали. `field_fact` может дать `failed`: сравнение со
-структурированным/явным фактом эталона позволяет содержательно отличить неверный ответ.
+из-за того, что ключевые слова M1 не совпали.
+
+`field_fact` содержательно может отличить неверный ответ (сравнение со структурированным/явным
+фактом эталона), но пока согласие оценивателя с рабочей разметкой ниже порога W-03 (решение
+F-2, `docs/ai/progress.md`, волна 3; калибровка — `docs/ai/calibration-report.md`), модель
+самостоятельно ставит `failed` только тем критериям, что явно перечислены в `JudgePolicy`
+(`policy.py`, конфиг `ai/config/judge.policy.json`) — по умолчанию список пуст. Для остальных
+уверенное `none` уходит в `not_checked` с объяснением «ждёт эксперта», как уже было устроено
+для `voice.facts_transferred`.
 """
 
 from __future__ import annotations
@@ -38,6 +45,7 @@ from ..contracts.common import Evidence, EvidenceKind, ModelRef
 from ..contracts.criteria import CriterionResult, CriterionStatus, PartialReason
 from ..faults import InvalidOutput
 from ..ports import LLMProvider
+from .policy import JudgePolicy
 from .prompts import JudgePromptTemplate
 from .schema import REASON_CODES, ConversationVerdict, FieldVerdict, MatchLevel
 
@@ -81,9 +89,16 @@ def _find_source_event(quote: str, transcript: Sequence[dict]) -> str | None:
 class LLMSemanticJudge:
     """Судит по одному критерию за раз (D-031: поштучно, с доказательством)."""
 
-    def __init__(self, llm: LLMProvider, *, prompt: JudgePromptTemplate | None = None):
+    def __init__(
+        self,
+        llm: LLMProvider,
+        *,
+        prompt: JudgePromptTemplate | None = None,
+        policy: JudgePolicy | None = None,
+    ):
         self.llm = llm
         self.prompt = prompt or JudgePromptTemplate.load()
+        self.policy = policy or JudgePolicy.load()
         self.model_ref = ModelRef(
             component="semantic_judge",
             model_name=llm.model_ref.model_name,
@@ -164,14 +179,27 @@ class LLMSemanticJudge:
                 explanation=explanation,
             )
         if verdict.match is MatchLevel.NONE:
+            if criterion_id in self.policy.failable_criteria:
+                return CriterionResult(
+                    criterion_id=criterion_id,
+                    status=CriterionStatus.FAILED,
+                    value=0,
+                    evidence=evidence,
+                    model_ref=self.model_ref,
+                    decided_by="model",
+                    explanation=explanation,
+                )
+            # F-2: пока согласие ниже W-03, некалиброванный критерий не проваливает модель
+            # самостоятельно — уверенное несовпадение ждёт эксперта, не штраф (инвариант 4).
             return CriterionResult(
                 criterion_id=criterion_id,
-                status=CriterionStatus.FAILED,
-                value=0,
-                evidence=evidence,
-                model_ref=self.model_ref,
-                decided_by="model",
-                explanation=explanation,
+                status=CriterionStatus.NOT_CHECKED,
+                explanation=(
+                    f"«{field_name}»: модель уверенно не подтверждает соответствие эталону "
+                    f"({verdict.reason_code}), но самостоятельный «не выполнено» по этому "
+                    "критерию пока не разрешён (F-2, согласие оценивателя ниже порога W-03) — "
+                    "ждёт эксперта."
+                ),
             )
         return CriterionResult(
             criterion_id=criterion_id,
