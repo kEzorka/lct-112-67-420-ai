@@ -30,8 +30,8 @@ Opus 5.5 — A, D. Sonnet 5 — B, C, E, F, G, H.
 | D | `ai/m3-llm` | `session_01FgBY1dsMVHh4kEk2DYfvdE` | влит 28.09 |
 | E | `ai/m4b-scenarios` | `session_01H2qy7VSMHpH3DBLGKFCqk9` | влит 28.09 |
 | F | `ai/m5-evaluation` | `session_01CbG4VuAGHmBTbvusXJeSAN` | влит 28.09 |
-| G | `ai/m6-adaptation` | `session_013muMPeKQ52pucbBiZEs3B3` | запущен 28.09 |
-| F2 | `ai/m5-calibration-2` | `session_013K9wZPYopsfjWR6LGpx3y9` | запущен 28.09 — модели 3B/7B, решение F-2 |
+| G | `ai/m6-adaptation` | `session_013muMPeKQ52pucbBiZEs3B3` | влит 28.09 |
+| F2 | `ai/m5-calibration-2` | `session_013K9wZPYopsfjWR6LGpx3y9` | влит 28.09 (без 7B и отчёта — сессия прервалась) |
 | H | `ai/m7-evidence` | — | ждёт всех |
 | V | `ai/bench-voice` | `session_01GhLvCd55XAbpvYE4JM3VGp` | влит 28.09 |
 

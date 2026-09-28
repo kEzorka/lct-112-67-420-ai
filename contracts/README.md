@@ -1,6 +1,6 @@
 # contracts/ — черновики контрактов ИИ-контура ↔ бэкенд
 
-Статус: **черновик `0.3.0-draft`**, не согласован с владельцем бэкенда (вопросы B01–B04 в [`docs/ai/agent-prompt.md`](../docs/ai/agent-prompt.md), раздел 12).
+Статус: **черновик `0.4.0-draft`**, не согласован с владельцем бэкенда (вопросы B01–B04 в [`docs/ai/agent-prompt.md`](../docs/ai/agent-prompt.md), раздел 12).
 
 Файлы `*.schema.json` (JSON Schema 2020-12) генерируются из моделей `ai/src/dds_ai/contracts/` командой `python ai/tools/export_schemas.py`. Руками не править: CI сверяет их с кодом.
 
