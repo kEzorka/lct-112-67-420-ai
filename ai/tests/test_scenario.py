@@ -21,8 +21,9 @@ def scenarios():
     return load_synthetic()
 
 
-def test_synthetic_set_is_marked_and_covers_three_decisions(scenarios):
-    assert len(scenarios) == 3
+def test_synthetic_set_is_marked_and_covers_all_decisions(scenarios):
+    # 8-12 сценариев для 2-3 профилей ДДС (6.5); точное число растёт с набором, не фиксировано
+    assert 8 <= len(scenarios) <= 12
     for s in scenarios.values():
         assert s.provenance is Provenance.SYNTHETIC
         assert s.title.startswith(SYNTHETIC_TITLE_PREFIX)

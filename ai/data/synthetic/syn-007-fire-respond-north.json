@@ -1,0 +1,51 @@
+{
+  "scenario": {"name": "syn-007-fire-respond-north", "version": "1"},
+  "title": "СИНТЕТИКА: искры и задымление из электрощита в подъезде — ДДС реагирует",
+  "provenance": "synthetic",
+  "incident_type": "fire_residential",
+  "dds_profile": "dds-north",
+  "published_facts": [
+    {"fact_id": "card.address", "topic": "address", "label": "Адрес", "state": "known", "value": "г. Учебный, ул. Полярная, д. 8"},
+    {"fact_id": "card.incident_type", "topic": "incident_type", "label": "Тип происшествия", "state": "known", "value": "пожар в жилом доме"},
+    {
+      "fact_id": "card.description",
+      "topic": "description",
+      "label": "Описание",
+      "state": "known",
+      "value": "Задымление и искры из электрощита на первом этаже подъезда",
+      "variant_values": ["Из электрощита на первом этаже идёт дым и искры"]
+    },
+    {"fact_id": "card.victims", "topic": "victims", "label": "Пострадавшие", "state": "unknown"}
+  ],
+  "interlocutors": [
+    {
+      "interlocutor": {
+        "role_id": "supervisor",
+        "published_fact_ids": ["sv.victims"],
+        "allowed_actions": ["listen", "clarify", "read_back", "confirm_receipt"]
+      },
+      "facts": [
+        {"fact_id": "sv.victims", "topic": "victims", "label": "Число пострадавших", "state": "unknown", "question_patterns": ["пострадав", "ранен"]}
+      ],
+      "report_items": [
+        {"item_id": "essence.fire", "element": "essence", "patterns": ["искр", "электрощит", "задымл"]},
+        {"item_id": "location.address", "element": "location", "patterns": ["полярн 8"]},
+        {"item_id": "circumstances.panel", "element": "circumstances", "patterns": ["электрощит", "первом этаж"]},
+        {"item_id": "decision.respond", "element": "dds_decision", "patterns": ["реагир", "принял к исполн", "направ", "выслал"]},
+        {"item_id": "request.ack", "element": "requested_action", "patterns": ["прошу", "просим"]}
+      ]
+    },
+    {
+      "interlocutor": {"role_id": "operator_112", "allowed_actions": ["listen"]},
+      "enabled": false
+    }
+  ],
+  "reference": {
+    "reference": {"name": "syn-007-fire-respond-north.ref", "version": "1"},
+    "expected_decision": "respond",
+    "expected_fields": {
+      "address": "г. Учебный, ул. Полярная, д. 8",
+      "incident_type": "пожар в жилом доме"
+    }
+  }
+}

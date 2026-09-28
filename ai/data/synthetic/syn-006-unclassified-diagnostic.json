@@ -1,0 +1,43 @@
+{
+  "scenario": {"name": "syn-006-unclassified-diagnostic", "version": "1"},
+  "title": "СИНТЕТИКА: неопознанный запах в подвале — диагностика неподтверждённого маршрута (C-03)",
+  "provenance": "synthetic",
+  "incident_type": "unclassified_odor",
+  "dds_profile": "dds-north",
+  "diagnostic": true,
+  "published_facts": [
+    {"fact_id": "card.address", "topic": "address", "label": "Адрес", "state": "known", "value": "г. Учебный, пер. Тупиковый, д. 2"},
+    {"fact_id": "card.incident_type", "topic": "incident_type", "label": "Тип происшествия", "state": "known", "value": "неопознанный запах в подвале"},
+    {"fact_id": "card.description", "topic": "description", "label": "Описание", "state": "known", "value": "Жилец сообщает о неопределённом запахе в подвале, источник не установлен"},
+    {"fact_id": "card.victims", "topic": "victims", "label": "Пострадавшие", "state": "unknown"}
+  ],
+  "interlocutors": [
+    {
+      "interlocutor": {
+        "role_id": "supervisor",
+        "published_fact_ids": [],
+        "allowed_actions": ["listen", "clarify", "read_back", "confirm_receipt"]
+      },
+      "report_items": [
+        {"item_id": "essence.odor", "element": "essence", "patterns": ["запах", "подвал"]},
+        {"item_id": "location.address", "element": "location", "patterns": ["тупиков 2"]},
+        {"item_id": "circumstances.unclear", "element": "circumstances", "patterns": ["не установлен", "неопредел"]},
+        {"item_id": "decision.note", "element": "dds_decision", "patterns": ["зафиксир", "неопредел", "уточн"]},
+        {"item_id": "request.ack", "element": "requested_action", "patterns": ["прошу", "просим"]}
+      ]
+    },
+    {
+      "interlocutor": {"role_id": "operator_112", "allowed_actions": ["listen"]},
+      "enabled": false
+    }
+  ],
+  "reference": {
+    "reference": {"name": "syn-006-unclassified-diagnostic.ref", "version": "1"},
+    "expected_decision": "refuse",
+    "expected_fields": {
+      "address": "г. Учебный, пер. Тупиковый, д. 2",
+      "incident_type": "неопознанный запах в подвале"
+    },
+    "not_applicable_criteria": ["routing.services"]
+  }
+}

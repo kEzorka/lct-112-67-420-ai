@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "dds-ai/scenario/0.2.0-draft",
+  "$id": "dds-ai/scenario-draft-record/0.2.0-draft",
   "$defs": {
     "CheckableItem": {
       "additionalProperties": false,
@@ -96,6 +96,107 @@
       "title": "FieldState",
       "type": "string"
     },
+    "GenerationInputs": {
+      "additionalProperties": false,
+      "description": "Вход генератора черновика: параметры от преподавателя (6.5).",
+      "properties": {
+        "incident_type": {
+          "minLength": 1,
+          "title": "Incident Type",
+          "type": "string"
+        },
+        "location": {
+          "minLength": 1,
+          "title": "Location",
+          "type": "string"
+        },
+        "difficulty": {
+          "minLength": 1,
+          "title": "Difficulty",
+          "type": "string"
+        },
+        "topic": {
+          "minLength": 1,
+          "title": "Topic",
+          "type": "string"
+        },
+        "dds_profile": {
+          "default": "profile-1",
+          "minLength": 1,
+          "title": "Dds Profile",
+          "type": "string"
+        }
+      },
+      "required": [
+        "incident_type",
+        "location",
+        "difficulty",
+        "topic"
+      ],
+      "title": "GenerationInputs",
+      "type": "object"
+    },
+    "GenerationMeta": {
+      "additionalProperties": false,
+      "description": "Основание генерации (инвариант 6): версия модели/шаблона и использованные фрагменты.",
+      "properties": {
+        "inputs": {
+          "$ref": "#/$defs/GenerationInputs"
+        },
+        "model_ref": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ModelRef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "None — детерминированный шаблон (базовая реализация 6.5.5)"
+        },
+        "template_version": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Версия шаблона, если генерация детерминированная",
+          "title": "Template Version"
+        },
+        "corpus_version": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/VersionRef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "used_fragment_ids": {
+          "default": [],
+          "description": "Фрагменты базы знаний (6.10), использованные при генерации",
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Used Fragment Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "inputs"
+      ],
+      "title": "GenerationMeta",
+      "type": "object"
+    },
     "Interlocutor": {
       "additionalProperties": false,
       "description": "Контракт собеседника: позже подключается канал оператора 112 (D-030).",
@@ -189,6 +290,46 @@
       "title": "InterlocutorBrief",
       "type": "object"
     },
+    "ModelRef": {
+      "additionalProperties": false,
+      "description": "Версия модели и промпта, на которой принято решение (инвариант 6).",
+      "properties": {
+        "component": {
+          "minLength": 1,
+          "title": "Component",
+          "type": "string"
+        },
+        "model_name": {
+          "minLength": 1,
+          "title": "Model Name",
+          "type": "string"
+        },
+        "model_version": {
+          "minLength": 1,
+          "title": "Model Version",
+          "type": "string"
+        },
+        "prompt_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Prompt Version"
+        }
+      },
+      "required": [
+        "component",
+        "model_name",
+        "model_version"
+      ],
+      "title": "ModelRef",
+      "type": "object"
+    },
     "Provenance": {
       "description": "Синтетический материал не называется реальным билетом (6.5).",
       "enum": [
@@ -209,6 +350,84 @@
       ],
       "title": "ReportElement",
       "type": "string"
+    },
+    "Scenario": {
+      "additionalProperties": false,
+      "properties": {
+        "scenario": {
+          "$ref": "#/$defs/VersionRef"
+        },
+        "title": {
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "provenance": {
+          "$ref": "#/$defs/Provenance"
+        },
+        "source_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Исходный билет; у производных вариантов — ссылка на него",
+          "title": "Source Ref"
+        },
+        "incident_type": {
+          "description": "Вход движка маршрутизации, не выбор служб",
+          "minLength": 1,
+          "title": "Incident Type",
+          "type": "string"
+        },
+        "dds_profile": {
+          "default": "profile-1",
+          "description": "Условный профиль ДДС пилота (D-019, W-03)",
+          "minLength": 1,
+          "title": "Dds Profile",
+          "type": "string"
+        },
+        "diagnostic": {
+          "default": false,
+          "description": "Диагностический сценарий на выявление неопределённости маршрута (C-03): не даёт автоматического штрафа/балла за маршрут и не публикуется как обычный",
+          "title": "Diagnostic",
+          "type": "boolean"
+        },
+        "published_facts": {
+          "items": {
+            "$ref": "#/$defs/ScenarioFact"
+          },
+          "minItems": 1,
+          "title": "Published Facts",
+          "type": "array"
+        },
+        "interlocutors": {
+          "items": {
+            "$ref": "#/$defs/InterlocutorBrief"
+          },
+          "minItems": 1,
+          "title": "Interlocutors",
+          "type": "array"
+        },
+        "reference": {
+          "$ref": "#/$defs/ScenarioReference"
+        }
+      },
+      "required": [
+        "scenario",
+        "title",
+        "provenance",
+        "incident_type",
+        "published_facts",
+        "interlocutors",
+        "reference"
+      ],
+      "title": "Scenario",
+      "type": "object"
     },
     "ScenarioCallState": {
       "description": "Сценарные состояния — не технический сбой.",
@@ -341,6 +560,18 @@
       "title": "ScenarioReference",
       "type": "object"
     },
+    "ScenarioStatus": {
+      "description": "Жизненный цикл черновика (6.5): draft → validated → approved → published → archived.",
+      "enum": [
+        "draft",
+        "validated",
+        "approved",
+        "published",
+        "archived"
+      ],
+      "title": "ScenarioStatus",
+      "type": "string"
+    },
     "SupervisorAction": {
       "enum": [
         "listen",
@@ -375,19 +606,30 @@
     }
   },
   "additionalProperties": false,
+  "description": "Черновик/версия сценария с её местом в жизненном цикле (6.5).",
   "properties": {
     "scenario": {
-      "$ref": "#/$defs/VersionRef"
+      "$ref": "#/$defs/Scenario"
     },
-    "title": {
-      "minLength": 1,
-      "title": "Title",
-      "type": "string"
+    "status": {
+      "$ref": "#/$defs/ScenarioStatus"
     },
-    "provenance": {
-      "$ref": "#/$defs/Provenance"
+    "generation": {
+      "$ref": "#/$defs/GenerationMeta"
     },
-    "source_ref": {
+    "revises": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/VersionRef"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Предыдущая версия, которую исправляет комментарий (6.5)"
+    },
+    "teacher_comment": {
       "anyOf": [
         {
           "type": "string"
@@ -397,57 +639,21 @@
         }
       ],
       "default": null,
-      "description": "Исходный билет; у производных вариантов — ссылка на него",
-      "title": "Source Ref"
+      "description": "Комментарий преподавателя, породивший этот черновик",
+      "title": "Teacher Comment"
     },
-    "incident_type": {
-      "description": "Вход движка маршрутизации, не выбор служб",
-      "minLength": 1,
-      "title": "Incident Type",
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
       "type": "string"
-    },
-    "dds_profile": {
-      "default": "profile-1",
-      "description": "Условный профиль ДДС пилота (D-019, W-03)",
-      "minLength": 1,
-      "title": "Dds Profile",
-      "type": "string"
-    },
-    "diagnostic": {
-      "default": false,
-      "description": "Диагностический сценарий на выявление неопределённости маршрута (C-03): не даёт автоматического штрафа/балла за маршрут и не публикуется как обычный",
-      "title": "Diagnostic",
-      "type": "boolean"
-    },
-    "published_facts": {
-      "items": {
-        "$ref": "#/$defs/ScenarioFact"
-      },
-      "minItems": 1,
-      "title": "Published Facts",
-      "type": "array"
-    },
-    "interlocutors": {
-      "items": {
-        "$ref": "#/$defs/InterlocutorBrief"
-      },
-      "minItems": 1,
-      "title": "Interlocutors",
-      "type": "array"
-    },
-    "reference": {
-      "$ref": "#/$defs/ScenarioReference"
     }
   },
   "required": [
     "scenario",
-    "title",
-    "provenance",
-    "incident_type",
-    "published_facts",
-    "interlocutors",
-    "reference"
+    "status",
+    "generation",
+    "created_at"
   ],
-  "title": "Scenario",
+  "title": "ScenarioDraftRecord",
   "type": "object"
 }

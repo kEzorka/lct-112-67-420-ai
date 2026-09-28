@@ -3,6 +3,7 @@
   "title": "СИНТЕТИКА: задымление квартиры в жилом доме — ДДС реагирует",
   "provenance": "synthetic",
   "incident_type": "fire_residential",
+  "dds_profile": "dds-center",
   "published_facts": [
     {"fact_id": "card.address", "topic": "address", "label": "Адрес", "state": "known", "value": "г. Учебный, ул. Тестовая, д. 12, кв. 5"},
     {"fact_id": "card.incident_type", "topic": "incident_type", "label": "Тип происшествия", "state": "known", "value": "пожар в жилом доме"},
