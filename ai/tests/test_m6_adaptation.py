@@ -192,6 +192,18 @@ def test_help_request_moves_attempt_to_supported_and_is_an_event(fire, rubric):
     assert not evaluation.track.counts_toward_independent_rating
 
 
+def test_help_request_opens_hints_immediately(fire):
+    """G-1: кнопка запроса помощи иначе бесполезна — подсказка доступна сразу после запроса,
+    без завершения попытки, но недоступна до запроса."""
+    s = TrainingSession(fire, mode=TrainingMode.INDEPENDENT)
+    with pytest.raises(HintDenied):
+        s.show_hint("подсказка до запроса помощи")
+    s.request_help()
+    s.show_hint("подсказка после запроса помощи")
+    hints = [e for e in s.events if isinstance(e, HintShown)]
+    assert [h.text for h in hints] == ["подсказка после запроса помощи"]
+
+
 def test_request_help_only_applies_to_independent_mode(fire):
     s = TrainingSession(fire, mode=TrainingMode.GUIDED)
     with pytest.raises(RuntimeError):

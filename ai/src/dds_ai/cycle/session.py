@@ -170,18 +170,18 @@ class TrainingSession:
     # --- подсказки и режимы (6.7, D-041) --------------------------------------------------
 
     def show_hint(self, text: str, *, hint_id: UUID | None = None) -> None:
-        """«Делай как я»: демонстрация/пошаговая подсказка — всегда событие в истории попытки."""
-        if not can_show_guided_hint(self.mode):
+        """«Делай как я» — всегда; самостоятельный режим — только после запроса помощи (G-1)."""
+        if not can_show_guided_hint(self.mode, self.log.events):
             raise HintDenied("guided hints are only available in guided mode")
         self.log.append(
             HintShown, source=EventSource.AI_WORKER, hint_id=hint_id or uuid4(), text=text
         )
 
     def request_help(self) -> None:
-        """Самостоятельный режим: запрос помощи переводит попытку в «с поддержкой» (D-041) —
-        меняет только классификацию (`track` перестаёт быть `independent`, попытка исключается
-        из самостоятельного рейтинга). Подсказка о правильном действии по-прежнему не
-        показывается до завершения попытки — это не открывает `show_hint()` (см. `hints.track`).
+        """Самостоятельный режим: запрос помощи сразу открывает подсказки (иначе кнопка
+        запроса помощи бесполезна — G-1) и переводит попытку в «с поддержкой» (D-041) —
+        `track` перестаёт быть `independent`, попытка исключается из самостоятельного
+        рейтинга. С этого момента `show_hint()` доступен так же, как в guided.
         """
         if self.mode is not TrainingMode.INDEPENDENT:
             raise RuntimeError("help_requested applies only to the independent mode")
