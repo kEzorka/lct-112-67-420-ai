@@ -4,7 +4,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-ruff check src tests tools
-ruff format --check src tests tools
+ruff check src tests tools bench
+ruff format --check src tests tools bench
 python -m pytest
 python tools/export_schemas.py --check
